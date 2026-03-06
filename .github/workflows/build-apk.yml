@@ -21,10 +21,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # No cache — avoids "lock file not found" error
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run tests
         run: npm test
@@ -54,7 +54,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          # cache: 'npm' omitted — requires package-lock.json to already exist
 
       # ── Android SDK ───────────────────────────────────
       - name: Setup Android SDK
@@ -68,7 +68,8 @@ jobs:
 
       # ── Node deps ─────────────────────────────────────
       - name: Install npm dependencies
-        run: npm ci
+        run: npm install
+        # Using npm install (not npm ci) — works with or without a lock file
 
       # ── Capacitor: add & sync Android platform ────────
       - name: Add Android platform
@@ -84,7 +85,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
       # ── Make gradlew executable ───────────────────────
