@@ -1,0 +1,19 @@
+{
+  "appId": "com.breeze.share",
+  "appName": "Breeze",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "buildOptions": {
+      "releaseType": "APK"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#F7F3EE",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

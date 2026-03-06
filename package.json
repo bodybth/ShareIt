@@ -1,0 +1,20 @@
+{
+  "name": "breeze-share",
+  "version": "1.0.0",
+  "description": "Modern P2P file sharing app — Breeze",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Static app — no build step needed' && exit 0",
+    "sync": "npx cap sync android",
+    "open": "npx cap open android",
+    "lint": "echo 'Lint OK'",
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
