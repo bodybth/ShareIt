@@ -56,10 +56,10 @@ test('BLE plugin conf',         !!cap.plugins?.BluetoothLe);
 
 // ── Package deps
 const deps = {...pkg.dependencies, ...pkg.devDependencies};
-test('@capacitor/android dep',        !!deps['@capacitor/android']);
-test('@capacitor/filesystem dep',     !!deps['@capacitor/filesystem']);
-test('@capacitor/network dep',        !!deps['@capacitor/network']);
-test('@capacitor-community/ble dep',  !!deps['@capacitor-community/bluetooth-le']);
+test('@capacitor/android dep',        deps['@capacitor/android']?.startsWith('^8'));
+test('@capacitor/filesystem dep',     deps['@capacitor/filesystem']?.startsWith('^8'));
+test('@capacitor/network dep',        deps['@capacitor/network']?.startsWith('^8'));
+test('@capacitor-community/ble dep',  deps['@capacitor-community/bluetooth-le']?.startsWith('^8'));
 
 // ── Patch script
 test('patch-android.js exists',       fs.existsSync('patch-android.js'));

@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '20'
 
-      - run: npm install
+      - run: npm install --legacy-peer-deps
       - run: npm test
 
   # ─────────────────────────────────────────────────────
@@ -61,8 +61,8 @@ jobs:
 
       # ── npm install ──────────────────────────────────
       - name: Install npm dependencies
-        run: npm install
-        # Uses npm install (not npm ci) to avoid lock-file requirement
+        run: npm install --legacy-peer-deps
+        # --legacy-peer-deps avoids ERESOLVE on transitive peer conflicts
 
       # ── Capacitor: add Android platform ──────────────
       - name: Add Android platform

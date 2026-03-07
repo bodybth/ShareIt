@@ -101,3 +101,15 @@ if (!xml.includes('<queries>') && !xml.includes('queries>')) {
 
 fs.writeFileSync(MANIFEST, xml, 'utf8');
 console.log('\n🍃 AndroidManifest.xml patched successfully!\n');
+
+// ── 5. Patch build.gradle minSdkVersion for Capacitor 8 ─────────────────────
+const GRADLE = path.join(__dirname, 'android/variables.gradle');
+if (fs.existsSync(GRADLE)) {
+  let gradle = fs.readFileSync(GRADLE, 'utf8');
+  // Cap 8 requires minSdk 24, compileSdk/targetSdk 36
+  gradle = gradle.replace(/minSdkVersion\s*=?\s*\d+/, 'minSdkVersion = 24');
+  gradle = gradle.replace(/compileSdkVersion\s*=?\s*\d+/, 'compileSdkVersion = 36');
+  gradle = gradle.replace(/targetSdkVersion\s*=?\s*\d+/, 'targetSdkVersion = 36');
+  fs.writeFileSync(GRADLE, gradle, 'utf8');
+  console.log('✅ variables.gradle updated for Capacitor 8 (minSdk=24, target=36)\n');
+}
