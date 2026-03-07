@@ -1,20 +1,21 @@
 {
   "name": "breeze-share",
-  "version": "1.0.0",
-  "description": "Modern P2P file sharing app — Breeze",
+  "version": "2.0.0",
+  "description": "Modern P2P file sharing — BLE + WiFi discovery, camera QR scanner",
   "private": true,
   "scripts": {
-    "build": "echo 'Static app — no build step needed' && exit 0",
-    "sync": "npx cap sync android",
-    "open": "npx cap open android",
-    "lint": "echo 'Lint OK'",
-    "test": "node test.js"
+    "build": "echo 'Static app, no build step' && exit 0",
+    "test": "node test.js",
+    "lint": "echo 'Lint OK'"
   },
   "dependencies": {
-    "@capacitor/android": "^6.1.2",
-    "@capacitor/core": "^6.1.2"
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/filesystem": "^6.0.2",
+    "@capacitor/network": "^6.0.3",
+    "@capacitor-community/bluetooth-le": "^5.1.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.1.2"
+    "@capacitor/cli": "^6.2.0"
   }
 }

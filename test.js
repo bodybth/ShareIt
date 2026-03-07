@@ -1,36 +1,74 @@
-// test.js
-const fs = require('fs');
-
-const html = fs.readFileSync('www/index.html', 'utf8');
-const cap  = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
+// test.js — Breeze v2 pre-build checks
+const fs  = require('fs');
+const cap = JSON.parse(fs.readFileSync('capacitor.config.json','utf8'));
+const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
+const html = fs.readFileSync('www/index.html','utf8');
+const patch = fs.readFileSync('patch-android.js','utf8');
 
 let pass = 0, fail = 0;
 function test(name, ok) {
-  if (ok) { console.log(`  ✅ ${name}`); pass++; }
-  else     { console.error(`  ❌ ${name}`); fail++; }
+  if (ok) { console.log(`  ✅  ${name}`); pass++; }
+  else     { console.error(`  ❌  ${name}`); fail++; }
 }
 
-console.log('\n🧪 Breeze pre-build checks…\n');
+console.log('\n🧪 Breeze v2 checks…\n');
 
-// HTML checks
-test('DOCTYPE present',        html.includes('<!DOCTYPE html>'));
-test('App title present',      html.includes('<title>'));
-test('PeerJS loaded',          html.includes('peerjs'));
-test('QR code lib loaded',     html.includes('qrcodejs'));
-test('initPeer() defined',     html.includes('function initPeer'));
-test('sendFiles() defined',    html.includes('function sendFiles'));
-test('Drop zone present',      html.includes('drop-zone'));
-test('File input present',     html.includes('file-input'));
-test('Connect button present', html.includes('connect-btn'));
-test('Send button present',    html.includes('send-btn'));
-test('Progress bar present',   html.includes('progress-bar'));
-test('Transfer log present',   html.includes('log-list'));
+// ── HTML structure
+test('DOCTYPE',                 html.includes('<!DOCTYPE html>'));
+test('Viewport meta',           html.includes('viewport'));
+test('PeerJS CDN',              html.includes('peerjs'));
+test('jsQR CDN',                html.includes('jsqr'));
+test('QRCode CDN',              html.includes('qrcodejs'));
 
-// Capacitor config checks
-test('appId set',    !!cap.appId && cap.appId.length > 0);
-test('appName set',  !!cap.appName);
-test('webDir = www', cap.webDir === 'www');
+// ── BLE
+test('BLE plugin wired',        html.includes('BluetoothLe') || html.includes('BLE'));
+test('BLE scan toggle',         html.includes('toggleScan'));
+test('BLE scan result handler', html.includes('onBLEScanResult'));
+test('Nearby device render',    html.includes('renderNearby'));
+
+// ── Camera QR
+test('getUserMedia call',       html.includes('getUserMedia'));
+test('jsQR decode call',        html.includes('jsQR('));
+test('openScanner function',    html.includes('function openScanner'));
+test('stopScanner function',    html.includes('function stopScanner'));
+test('QR video element',        html.includes('qr-video'));
+test('QR canvas element',       html.includes('qr-canvas'));
+
+// ── Incoming request / permission dialog
+test('file-request message',    html.includes("'file-request'") || html.includes('"file-request"'));
+test('accepted message',        html.includes("'accepted'") || html.includes('"accepted"'));
+test('rejected message',        html.includes("'rejected'") || html.includes('"rejected"'));
+test('showIncomingRequest fn',  html.includes('showIncomingRequest'));
+test('acceptIncoming fn',       html.includes('acceptIncoming'));
+test('rejectIncoming fn',       html.includes('rejectIncoming'));
+test('Incoming modal present',  html.includes('modal-incoming'));
+
+// ── File saving
+test('saveFile to /sdcard/',    html.includes('Breeze/') && html.includes('EXTERNAL_STORAGE'));
+test('blobToBase64 helper',     html.includes('blobToBase64'));
+test('Filesystem plugin used',  html.includes('FS.writeFile') || html.includes('Filesystem'));
+
+// ── Capacitor config
+test('appId set',               !!cap.appId);
+test('webDir = www',            cap.webDir === 'www');
+test('Filesystem plugin conf',  !!cap.plugins?.Filesystem);
+test('BLE plugin conf',         !!cap.plugins?.BluetoothLe);
+
+// ── Package deps
+const deps = {...pkg.dependencies, ...pkg.devDependencies};
+test('@capacitor/android dep',        !!deps['@capacitor/android']);
+test('@capacitor/filesystem dep',     !!deps['@capacitor/filesystem']);
+test('@capacitor/network dep',        !!deps['@capacitor/network']);
+test('@capacitor-community/ble dep',  !!deps['@capacitor-community/bluetooth-le']);
+
+// ── Patch script
+test('patch-android.js exists',       fs.existsSync('patch-android.js'));
+test('BLUETOOTH_SCAN in patch',       patch.includes('BLUETOOTH_SCAN'));
+test('CAMERA permission in patch',    patch.includes('android.permission.CAMERA'));
+test('EXTERNAL_STORAGE in patch',     patch.includes('EXTERNAL_STORAGE'));
+test('MANAGE_EXTERNAL_STORAGE',       patch.includes('MANAGE_EXTERNAL_STORAGE'));
+test('requestLegacyExternalStorage',  patch.includes('requestLegacyExternalStorage'));
 
 console.log(`\n📊  ${pass} passed · ${fail} failed\n`);
-if (fail > 0) { process.exit(1); }
+if (fail) { process.exit(1); }
 else console.log('All checks passed! Ready to build APK 🍃\n');

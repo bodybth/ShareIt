@@ -6,14 +6,28 @@
   "android": {
     "buildOptions": {
       "releaseType": "APK"
-    }
+    },
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 1500,
+      "launchShowDuration": 1200,
       "backgroundColor": "#F7F3EE",
-      "androidSplashResourceName": "splash",
-      "showSpinner": false
+      "showSpinner": false,
+      "androidSplashResourceName": "splash"
+    },
+    "Filesystem": {
+      "storageDirectory": "EXTERNAL_STORAGE"
+    },
+    "BluetoothLe": {
+      "displayStrings": {
+        "scanning": "Looking for Breeze devices…",
+        "cancel": "Cancel",
+        "availableDevices": "Nearby Breeze Devices",
+        "noDeviceFound": "No devices found"
+      }
     }
   }
 }
