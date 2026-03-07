@@ -695,7 +695,13 @@ function initPeer() {
   });
 
   state.peer.on('error', err => {
-    toast('Connection error: ' + err.type, 'err');
+    // peer-unavailable fires during discovery pings — expected, suppress silently
+    if (err.type === 'peer-unavailable') return;
+    if (err.type === 'network' || err.type === 'server-error') {
+      toast('Network error — check your connection', 'err');
+    } else {
+      toast('Connection error: ' + err.type, 'err');
+    }
   });
 
   state.peer.on('disconnected', () => {
@@ -729,7 +735,13 @@ function setupOutboundConn(conn, peerId, name) {
   });
   conn.on('data', handleData);
   conn.on('close', onConnClose);
-  conn.on('error', e => toast('Connection error', 'err'));
+  conn.on('error', e => {
+    const msg = e?.type === 'peer-unavailable'
+      ? 'Device not found — check the ID and try again'
+      : 'Connection failed: ' + (e?.type || e);
+    toast(msg, 'err');
+    onConnClose();
+  });
 }
 
 function handleInboundConn(conn) {
@@ -963,24 +975,33 @@ function onBLEScanResult(result) {
 }
 
 function tryWifiDiscovery() {
-  // Use PeerJS to "ping" a discovery ID based on local time window
-  // Devices nearby on the same network will connect to the same discovery peer
-  // This is a soft discovery — we announce ourselves and listen for others
+  // Soft Wi-Fi discovery: connect to a shared time-slotted peer ID.
+  // If nobody is there, PeerJS fires peer-unavailable — that's expected and
+  // is now suppressed in the global error handler.
   if (!state.peer || !state.myPeerId) return;
   const slot = Math.floor(Date.now() / 30000); // 30-second window
   const discoveryId = 'breeze-discovery-' + slot;
-  try {
-    const conn = state.peer.connect(discoveryId, { reliable: false, serialization: 'raw' });
-    conn.on('open', () => {
-      conn.send(enc(JSON.stringify({type:'announce', name: state.myDeviceName, peerId: state.myPeerId})));
-      setTimeout(() => conn.close(), 2000);
-    });
-  } catch(e){}
 
-  // Also listen for discovery connections
-  state.peer.on('connection', conn => {
-    if (conn.peer?.startsWith('breeze-discovery-')) return; // ignore self-discovery
-    // handled by main inbound handler
+  const conn = state.peer.connect(discoveryId, { reliable: false, serialization: 'raw' });
+
+  // Silently swallow errors on this probe connection (peer-unavailable is normal)
+  conn.on('error', () => {});
+
+  conn.on('open', () => {
+    conn.send(enc(JSON.stringify({
+      type: 'announce',
+      name: state.myDeviceName,
+      peerId: state.myPeerId
+    })));
+    // Register self as the discovery endpoint so others can find us
+    state.nearbyDevices.set('wifi-self', {
+      deviceId: 'wifi-self',
+      name: state.myDeviceName + ' (You)',
+      rssi: -40,
+      method: 'wifi',
+      peerId: state.myPeerId
+    });
+    setTimeout(() => { try { conn.close(); } catch(e){} }, 2000);
   });
 }
 
