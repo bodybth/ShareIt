@@ -1,16 +1,16 @@
 /**
- * patch-android.js
- * Runs after `npx cap add android` to inject:
- *  - All required Android permissions
- *  - requestLegacyExternalStorage for /sdcard/ access
- *  - tools namespace for permission flags
- *  - queries block for BLE on Android 12+
+ * patch-android.js — Breeze v2
+ *
+ * Safely patches AndroidManifest.xml after `npx cap add android`.
+ * Every permission is checked individually before insertion —
+ * no duplicates, no invalid attributes.
  */
 
 const fs   = require('fs');
 const path = require('path');
 
 const MANIFEST = path.join(__dirname, 'android/app/src/main/AndroidManifest.xml');
+const GRADLE   = path.join(__dirname, 'android/variables.gradle');
 
 if (!fs.existsSync(MANIFEST)) {
   console.error('❌  AndroidManifest.xml not found. Run `npx cap add android` first.');
@@ -19,96 +19,113 @@ if (!fs.existsSync(MANIFEST)) {
 
 let xml = fs.readFileSync(MANIFEST, 'utf8');
 
-// ── 1. Add tools namespace to <manifest> tag ─────────────────────────────────
+// ── Helper: inject a permission only if not already present ──────────────────
+function addPermission(name, extra = '') {
+  if (xml.includes(`android:name="${name}"`)) {
+    console.log(`  ⏭️  Already present: ${name}`);
+    return;
+  }
+  const tag = extra
+    ? `    <uses-permission android:name="${name}"\n        ${extra}/>`
+    : `    <uses-permission android:name="${name}"/>`;
+  xml = xml.replace('</manifest>', tag + '\n</manifest>');
+  console.log(`  ✅  Added: ${name}`);
+}
+
+function addFeature(name, required = 'false') {
+  if (xml.includes(`android:name="${name}"`)) return;
+  const tag = `    <uses-feature android:name="${name}" android:required="${required}"/>`;
+  xml = xml.replace('</manifest>', tag + '\n</manifest>');
+  console.log(`  ✅  Added feature: ${name}`);
+}
+
+console.log('\n🔧 Patching AndroidManifest.xml…\n');
+
+// ── 1. Add tools namespace ────────────────────────────────────────────────────
 if (!xml.includes('xmlns:tools')) {
   xml = xml.replace(
-    /(<manifest[^>]*)(>)/,
+    /(<manifest\b[^>]*)(>)/,
     '$1\n    xmlns:tools="http://schemas.android.com/tools"$2'
   );
-  console.log('  ✅ Added xmlns:tools namespace');
+  console.log('  ✅  Added xmlns:tools namespace');
 }
 
-// ── 2. Inject all permissions before </manifest> ─────────────────────────────
-const PERMISSIONS = `
-    <!-- ── Bluetooth (legacy Android ≤ 11) ── -->
-    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30"/>
+// ── 2. Permissions ───────────────────────────────────────────────────────────
+// Bluetooth legacy (Android <= 11)
+addPermission('android.permission.BLUETOOTH',       'android:maxSdkVersion="30"');
+addPermission('android.permission.BLUETOOTH_ADMIN', 'android:maxSdkVersion="30"');
 
-    <!-- ── Bluetooth (Android 12+) ── -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE"/>
+// Bluetooth modern (Android 12+) — NO tools:targetSdk (not a valid merger instruction)
+addPermission('android.permission.BLUETOOTH_SCAN',
+  'android:usesPermissionFlags="neverForLocation"');
+addPermission('android.permission.BLUETOOTH_CONNECT');
+addPermission('android.permission.BLUETOOTH_ADVERTISE');
 
-    <!-- ── Location (required for BLE on Android < 12) ── -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+// Location (required for BLE on Android < 12)
+addPermission('android.permission.ACCESS_FINE_LOCATION');
+addPermission('android.permission.ACCESS_COARSE_LOCATION');
 
-    <!-- ── Network ── -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
+// Network — INTERNET is already added by Capacitor, skip to avoid duplicate
+addPermission('android.permission.ACCESS_WIFI_STATE');
+addPermission('android.permission.ACCESS_NETWORK_STATE');
+addPermission('android.permission.CHANGE_NETWORK_STATE');
+addPermission('android.permission.CHANGE_WIFI_STATE');
 
-    <!-- ── Camera (for QR scanner) ── -->
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+// Camera (QR scanner)
+addPermission('android.permission.CAMERA');
+addFeature('android.hardware.camera');
 
-    <!-- ── Storage — read/write /sdcard/Breeze/ ── -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="29"/>
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+// Storage
+addPermission('android.permission.READ_EXTERNAL_STORAGE',  'android:maxSdkVersion="32"');
+addPermission('android.permission.WRITE_EXTERNAL_STORAGE', 'android:maxSdkVersion="29"');
+addPermission('android.permission.MANAGE_EXTERNAL_STORAGE');
 
-    <!-- ── Vibration (transfer notifications) ── -->
-    <uses-permission android:name="android.permission.VIBRATE"/>
+// Vibration
+addPermission('android.permission.VIBRATE');
 
-`;
-
-if (!xml.includes('BLUETOOTH_SCAN')) {
-  xml = xml.replace('</manifest>', PERMISSIONS + '</manifest>');
-  console.log('  ✅ Injected all permissions');
-}
-
-// ── 3. Add requestLegacyExternalStorage + queries to <application> ───────────
+// ── 3. requestLegacyExternalStorage ──────────────────────────────────────────
 if (!xml.includes('requestLegacyExternalStorage')) {
   xml = xml.replace(
-    /(<application\b[^>]*)(>)/s,
-    (match, open, close) => {
-      if (open.includes('android:requestLegacyExternalStorage')) return match;
-      return open + '\n        android:requestLegacyExternalStorage="true"' + close;
-    }
+    /(<application\b)([^>]*?)(>)/s,
+    '$1$2\n        android:requestLegacyExternalStorage="true"$3'
   );
-  console.log('  ✅ Added requestLegacyExternalStorage="true"');
+  console.log('\n  ✅  Set requestLegacyExternalStorage="true"');
+} else {
+  console.log('\n  ⏭️  requestLegacyExternalStorage already set');
 }
 
-// ── 4. Add queries block for BLE on Android 11+ ──────────────────────────────
-const QUERIES = `
+// ── 4. BLE queries block ──────────────────────────────────────────────────────
+if (!xml.includes('<queries>')) {
+  const queries = `
     <queries>
         <intent>
             <action android:name="android.bluetooth.adapter.action.REQUEST_ENABLE"/>
         </intent>
     </queries>
 `;
-
-if (!xml.includes('<queries>') && !xml.includes('queries>')) {
-  xml = xml.replace('</manifest>', QUERIES + '\n</manifest>');
-  console.log('  ✅ Added BLE queries block');
+  xml = xml.replace('</manifest>', queries + '</manifest>');
+  console.log('  ✅  Added BLE queries block');
+} else {
+  console.log('  ⏭️  queries block already present');
 }
 
+// ── Write ─────────────────────────────────────────────────────────────────────
 fs.writeFileSync(MANIFEST, xml, 'utf8');
-console.log('\n🍃 AndroidManifest.xml patched successfully!\n');
+console.log('\n✅  AndroidManifest.xml patched!\n');
 
-// ── 5. Patch build.gradle minSdkVersion for Capacitor 8 ─────────────────────
-const GRADLE = path.join(__dirname, 'android/variables.gradle');
+// ── 5. Patch variables.gradle for Capacitor 8 (minSdk=24) ────────────────────
 if (fs.existsSync(GRADLE)) {
   let gradle = fs.readFileSync(GRADLE, 'utf8');
-  // Cap 8 requires minSdk 24, compileSdk/targetSdk 36
-  gradle = gradle.replace(/minSdkVersion\s*=?\s*\d+/, 'minSdkVersion = 24');
-  gradle = gradle.replace(/compileSdkVersion\s*=?\s*\d+/, 'compileSdkVersion = 36');
-  gradle = gradle.replace(/targetSdkVersion\s*=?\s*\d+/, 'targetSdkVersion = 36');
-  fs.writeFileSync(GRADLE, gradle, 'utf8');
-  console.log('✅ variables.gradle updated for Capacitor 8 (minSdk=24, target=36)\n');
+  const before = gradle;
+  gradle = gradle.replace(/minSdkVersion\s*=\s*\d+/,     'minSdkVersion = 24');
+  gradle = gradle.replace(/compileSdkVersion\s*=\s*\d+/,  'compileSdkVersion = 36');
+  gradle = gradle.replace(/targetSdkVersion\s*=\s*\d+/,   'targetSdkVersion = 36');
+  if (gradle !== before) {
+    fs.writeFileSync(GRADLE, gradle, 'utf8');
+    console.log('✅  variables.gradle: minSdk=24, compileSdk=36, targetSdk=36\n');
+  } else {
+    console.log('⏭️  variables.gradle already up to date\n');
+  }
+} else {
+  console.log('⚠️  variables.gradle not found — skip\n');
 }
