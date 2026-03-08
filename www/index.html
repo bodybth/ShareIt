@@ -695,18 +695,31 @@ function initPeer() {
   });
 
   state.peer.on('error', err => {
-    // peer-unavailable fires during discovery pings — expected, suppress silently
+    // Silently swallow expected errors
     if (err.type === 'peer-unavailable') return;
+    // When offline, network errors are expected — don't spam toasts
+    if (!navigator.onLine && (err.type === 'network' || err.type === 'server-error')) return;
     if (err.type === 'network' || err.type === 'server-error') {
-      toast('Network error — check your connection', 'err');
-    } else {
+      if (!state._netErrToasted) {
+        state._netErrToasted = true;
+        toast('Network error — check your connection', 'err');
+        setTimeout(() => { state._netErrToasted = false; }, 10000);
+      }
+    } else if (err.type !== 'browser-incompatible') {
       toast('Connection error: ' + err.type, 'err');
     }
   });
 
   state.peer.on('disconnected', () => {
-    toast('Reconnecting…');
-    state.peer.reconnect();
+    // Only reconnect/toast if we're actually online — avoids toast flood when Wi-Fi is off
+    if (navigator.onLine) {
+      if (!state._reconnecting) {
+        state._reconnecting = true;
+        toast('Reconnecting…');
+        setTimeout(() => { state._reconnecting = false; }, 8000);
+      }
+      try { state.peer.reconnect(); } catch(e) {}
+    }
   });
 }
 
@@ -920,24 +933,54 @@ async function startScan() {
   document.getElementById('scan-btn').textContent = 'Stop';
   renderNearby();
 
-  // ── BLE Scan ─────────────────────────────────────────
+  // ── BLE Scan ──────────────────────────────────────────────
   if (BLE) {
     try {
+      // Step 1: check/request permissions
+      const permResult = await BLE.checkPermissions().catch(() => null);
+      if (permResult && (permResult.location === 'denied' || permResult.bluetooth === 'denied')) {
+        await BLE.requestPermissions().catch(()=>{});
+      }
+
+      // Step 2: initialize and prompt user to enable Bluetooth if off
       await BLE.initialize({ androidNeverForLocation: false });
-      BLE.addListener('onScanResult', onBLEScanResult);
-      await BLE.requestLEScan({ services: [], allowDuplicates: false, scanMode: 2 });
+
+      // Step 3: requestEnable shows the system dialog "Turn on Bluetooth?"
+      try {
+        await BLE.requestEnable();
+      } catch(e) {
+        // User declined — continue without BLE
+        toast('Bluetooth is off — showing Wi-Fi devices only');
+        tryWifiDiscovery();
+        return;
+      }
+
+      // Step 4: start scanning — scan ALL devices (no service filter)
+      // We show every named device; user picks the one running Breeze
+      await BLE.addListener('onScanResult', onBLEScanResult);
+      await BLE.requestLEScan({
+        services: [],          // no filter — see all nearby BLE devices
+        allowDuplicates: false,
+        scanMode: 2            // SCAN_MODE_LOW_LATENCY for fast results
+      });
       bleScanActive = true;
+      console.log('BLE scan started');
     } catch(e) {
       console.warn('BLE scan failed:', e);
-      if (e?.message?.includes('permission')) toast('Enable Bluetooth permission', 'err');
+      const msg = e?.message || '';
+      if (msg.includes('permission') || msg.includes('Permission')) {
+        toast('Bluetooth permission denied — grant it in App Settings', 'err');
+      } else if (msg.includes('disabled') || msg.includes('powered')) {
+        toast('Please enable Bluetooth and try again', 'err');
+      } else {
+        toast('Bluetooth unavailable on this device');
+      }
     }
   } else {
-    console.log('BLE plugin not available (running in browser?)');
+    console.log('BLE plugin not loaded — Wi-Fi only mode');
   }
 
-  // ── Wi-Fi mDNS-style: broadcast presence via PeerJS signaling ──
-  // Devices on the same network connected to PeerJS will appear
-  // We use a shared "discovery room" technique
+  // ── Wi-Fi discovery via PeerJS ─────────────────────────────
   tryWifiDiscovery();
 }
 
@@ -958,18 +1001,19 @@ function stopScan() {
 
 function onBLEScanResult(result) {
   const dev = result.device;
-  if (!dev) return;
-  const name = dev.name || dev.deviceId?.slice(0,8) || 'Unknown';
-  // Only show devices advertising Breeze service OR named "Breeze-*"
-  const isBreeze = result.serviceUuids?.some(u => u.toLowerCase().includes('4fafc201')) || name.startsWith('Breeze');
-  if (!isBreeze && !name.startsWith('Breeze')) return;
+  if (!dev?.deviceId) return;
+
+  // Show ALL named BLE devices — the user knows which phone belongs to their friend
+  // Anonymous/nameless devices (most IoT) are filtered out for clarity
+  const name = dev.name?.trim();
+  if (!name) return; // skip unnamed devices (headphones, beacons, etc.)
 
   state.nearbyDevices.set(dev.deviceId, {
     deviceId: dev.deviceId,
-    name: name.replace(/^Breeze[-_ ]?/, '') || 'Nearby Device',
-    rssi: result.rssi || -70,
+    name: name,
+    rssi: result.rssi ?? -90,
     method: 'ble',
-    peerIdHint: null,
+    peerId: null, // they'll share via QR/ID after tapping
   });
   renderNearby();
 }
@@ -1028,18 +1072,23 @@ function renderNearby() {
 }
 
 function onDeviceTap(deviceId, name, method) {
-  // If we have a peer ID for this device, connect directly
   const dev = state.nearbyDevices.get(deviceId);
+
+  // If we already resolved the Breeze Peer ID for this device, connect directly
   if (dev?.peerId) {
     connectToPeer(dev.peerId, name);
-  } else {
-    // Need to scan QR or enter ID
-    switchTab('send');
-    setTimeout(() => {
-      toast('Scan their QR code or paste their ID to connect');
-      openScanner();
-    }, 300);
+    return;
   }
+
+  // Otherwise guide the user: show a bottom sheet with options
+  showDeviceConnectSheet(name, deviceId);
+}
+
+function showDeviceConnectSheet(name, deviceId) {
+  // Reuse the manual-connect area on the Send tab
+  switchTab('send');
+  document.getElementById('remote-id-input').placeholder = name + "'s Breeze ID";
+  toast('Found ' + name + ' nearby — scan their QR or ask for their ID');
 }
 
 function signalBars(rssi) {
