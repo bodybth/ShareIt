@@ -483,7 +483,11 @@ function initPeer() {
   state.peer.on('connection', conn => handleInboundConn(conn));
 
   state.peer.on('error', err => {
-    if (err.type === 'peer-unavailable') return; // discovery probe — silent
+    if (err.type === 'peer-unavailable') {
+      // Route to discovery handler — this is how we know "no hub yet, become one"
+      onDiscoveryPeerUnavailable();
+      return;
+    }
     if (!navigator.onLine && (err.type === 'network' || err.type === 'server-error')) return;
     if (err.type === 'network' || err.type === 'server-error') {
       if (!state._netErrToasted) {
@@ -491,7 +495,7 @@ function initPeer() {
         toast('Network error — check connection', 'err');
         setTimeout(() => { state._netErrToasted = false; }, 10000);
       }
-    } else if (err.type !== 'browser-incompatible') {
+    } else if (err.type !== 'browser-incompatible' && err.type !== 'unavailable-id') {
       toast('Error: ' + err.type, 'err');
     }
   });
@@ -588,7 +592,9 @@ function stopScan() {
     BLE.removeAllListeners().catch(() => {});
     bleScanActive = false;
   }
-  // Clean up discovery hub if we were hosting
+  // Clear pending discovery state
+  state.pendingDisc = null;
+  state.discProbe   = null;
   if (state.discoveryHub) {
     try { state.discoveryHub.destroy(); } catch(e) {}
     state.discoveryHub = null;
@@ -630,99 +636,144 @@ function onBLEScanResult(result) {
   console.log('BLE Breeze device found:', deviceName, peerId);
 }
 
-// ── Wi-Fi Discovery: Hub/Spoke via PeerJS ─────────────────────────────────
-// One device becomes the "hub" for the current 30-second time slot.
-// Others connect to it, exchange peer IDs, and both sides see each other.
-// ──────────────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// WI-FI DISCOVERY — Hub/Spoke via PeerJS (fixed)
+//
+// ROOT CAUSE OF PREVIOUS BUG:
+//   In PeerJS 1.x, "peer-unavailable" fires on state.peer.on('error'),
+//   NOT on the individual probe connection. So probe.on('error') never
+//   fired, the hub was never created, and nobody found anyone.
+//
+// FIX:
+//   1. Global error handler routes peer-unavailable → onDiscoveryPeerUnavailable()
+//   2. Use 5-minute slots (handles clock differences between devices)
+//   3. Try current AND previous slot before giving up and hosting
+//   4. Explicit 6s timeout as a fallback in case error is swallowed
+// ══════════════════════════════════════════════════════════
+
+const DISC_SLOT_MS = 5 * 60 * 1000; // 5-min slots — tolerates timing differences
+
 function tryWifiDiscovery() {
   if (!state.peer || !state.myPeerId) return;
+  const slot = Math.floor(Date.now() / DISC_SLOT_MS);
+  startDiscoveryProbe(slot, true);
+}
 
-  const slot    = Math.floor(Date.now() / 30000); // 30-sec window
-  const hubId   = 'breeze-hub-' + slot;
-  const myInfo  = { name: state.myDeviceName, peerId: state.myPeerId };
+function startDiscoveryProbe(slot, tryPrevToo) {
+  if (!state.scanning && !state.peer) return;
 
-  // ── Try to join existing hub ──────────────────────────────
+  const hubId  = 'bz' + slot;
+  const myInfo = { name: state.myDeviceName, peerId: state.myPeerId };
+
+  // Save context so global peer-unavailable handler knows what to do
+  state.pendingDisc = { hubId, slot, myInfo, tryPrevToo };
+
   const probe = state.peer.connect(hubId, { reliable: true, serialization: 'raw' });
-  probe.on('error', () => {
-    // Nobody hosting yet — become the hub
-    becomeDiscoveryHub(hubId, myInfo);
-  });
+  state.discProbe = probe;
+
+  // Fallback timeout — if no open/error within 6s, treat as no-hub
+  const fallback = setTimeout(() => {
+    if (state.pendingDisc?.hubId === hubId) {
+      console.log('Discovery timeout for', hubId, '— becoming hub');
+      state.pendingDisc = null;
+      becomeDiscoveryHub(slot, myInfo);
+    }
+  }, 6000);
+
   probe.on('open', () => {
-    // Hub found — announce ourselves
-    probe.send(enc(JSON.stringify({ type: 'announce', ...myInfo })));
-    console.log('Joined discovery hub:', hubId);
+    clearTimeout(fallback);
+    state.pendingDisc = null;
+    console.log('Joined hub:', hubId);
+    probe.send(enc(JSON.stringify({ type: 'join', name: myInfo.name, peerId: myInfo.peerId })));
   });
+
   probe.on('data', data => {
     try {
       const msg = JSON.parse(dec(data));
-      // Hub sends back the list of everyone in the room
-      if (msg.type === 'device-list' && Array.isArray(msg.devices)) {
-        msg.devices.forEach(d => {
-          if (d.peerId === state.myPeerId) return; // skip self
-          addWifiDevice(d.name, d.peerId);
+      if (msg.type === 'roster' && Array.isArray(msg.peers)) {
+        msg.peers.forEach(d => {
+          if (d.peerId !== state.myPeerId) addWifiDevice(d.name, d.peerId);
         });
       }
     } catch(e) {}
   });
-  probe.on('close', () => { try { probe.close(); } catch(e) {} });
+
+  probe.on('error', () => { clearTimeout(fallback); }); // connection-level only
+  probe.on('close',  () => { clearTimeout(fallback); });
 }
 
-function becomeDiscoveryHub(hubId, myInfo) {
-  // Spin up a secondary Peer at the well-known hub ID
+// Called by global peer.on('error') when peer-unavailable fires
+function onDiscoveryPeerUnavailable() {
+  if (!state.pendingDisc) return;
+  const { hubId, slot, myInfo, tryPrevToo } = state.pendingDisc;
+  state.pendingDisc = null;
+  console.log('Hub unavailable:', hubId);
+
+  if (tryPrevToo) {
+    // Try previous slot — handles case where one device started scanning earlier
+    console.log('Trying previous slot:', slot - 1);
+    startDiscoveryProbe(slot - 1, false);
+  } else {
+    // Neither slot has a hub — we become the host
+    becomeDiscoveryHub(slot, myInfo);
+  }
+}
+
+function becomeDiscoveryHub(slot, myInfo) {
+  if (!state.scanning) return;
+  const hubId = 'bz' + slot;
+  console.log('Becoming hub:', hubId);
+
   const hub = new Peer(hubId, {
     host: '0.peerjs.com', port: 443, path: '/', secure: true,
     config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
   });
-
-  const room = [myInfo]; // list of everyone in this slot
+  const roster = [myInfo];
 
   hub.on('open', () => {
-    console.log('Hosting discovery hub:', hubId);
     state.discoveryHub = hub;
+    console.log('Hosting hub:', hubId);
   });
 
   hub.on('connection', conn => {
     conn.on('data', data => {
       try {
         const msg = JSON.parse(dec(data));
-        if (msg.type !== 'announce') return;
-
-        const peer = { name: msg.name, peerId: msg.peerId };
-        if (!room.find(r => r.peerId === peer.peerId)) room.push(peer);
-
-        // Show the joiner in our nearby list
-        addWifiDevice(peer.name, peer.peerId);
-
-        // Send the full room list back so the joiner sees everyone
-        conn.send(enc(JSON.stringify({ type: 'device-list', devices: room })));
+        if (msg.type !== 'join') return;
+        const entry = { name: msg.name, peerId: msg.peerId };
+        if (!roster.find(r => r.peerId === entry.peerId)) roster.push(entry);
+        addWifiDevice(entry.name, entry.peerId);
+        // Send full roster so joiner sees everyone already in the room
+        conn.send(enc(JSON.stringify({ type: 'roster', peers: roster })));
       } catch(e) {}
     });
     conn.on('error', () => {});
   });
 
   hub.on('error', e => {
-    // ID conflict — someone else became hub in the race; probe them instead
     if (e.type === 'unavailable-id') {
-      console.log('Hub ID taken, connecting as spoke');
-      state.discoveryHub = null;
+      // Race condition — someone else registered the hub ID first
+      // Destroy our attempt and join theirs instead
+      console.log('Hub ID race lost — joining winner');
       hub.destroy();
-      setTimeout(() => tryWifiDiscovery(), 500); // retry once
+      state.discoveryHub = null;
+      setTimeout(() => startDiscoveryProbe(slot, false), 800);
     }
   });
 }
 
 function addWifiDevice(name, peerId) {
-  if (state.nearbyDevices.has(peerId)) return; // already listed
+  if (state.nearbyDevices.has(peerId)) return;
   state.nearbyDevices.set(peerId, {
     deviceId: peerId,
     name:     name,
-    rssi:     -45, // Wi-Fi devices get high signal priority
+    rssi:     -40,
     method:   'wifi',
-    isBreeze: true, // only Breeze devices appear via Wi-Fi discovery
+    isBreeze: true,
     peerId:   peerId,
   });
   renderNearby();
-  console.log('Wi-Fi discovered:', name, peerId);
+  console.log('Wi-Fi device discovered:', name, peerId);
 }
 
 function renderNearby() {

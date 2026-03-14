@@ -63,7 +63,7 @@ test('File viewer modal',      html.includes('modal-fileview'));
 test('Blob URL revoked',       html.includes('revokeObjectURL'));
 
 // Error handling
-test('peer-unavailable silent',html.includes("'peer-unavailable') return"));
+test('peer-unavailable routed',  html.includes('onDiscoveryPeerUnavailable'));
 test('Offline guard',          html.includes('navigator.onLine'));
 test('Toast rate limit',       html.includes('box.children.length > 2'));
 
