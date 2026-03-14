@@ -4,22 +4,15 @@
   "webDir": "www",
   "bundledWebRuntime": false,
   "android": {
-    "buildOptions": {
-      "releaseType": "APK"
-    },
+    "buildOptions": { "releaseType": "APK" },
     "allowMixedContent": true,
-    "captureInput": true,
     "webContentsDebuggingEnabled": false
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1200,
       "backgroundColor": "#F7F3EE",
-      "showSpinner": false,
-      "androidSplashResourceName": "splash"
-    },
-    "Filesystem": {
-      "storageDirectory": "EXTERNAL_STORAGE"
+      "showSpinner": false
     },
     "BluetoothLe": {
       "displayStrings": {

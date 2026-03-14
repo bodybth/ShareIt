@@ -8,75 +8,56 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ─────────────────────────────────────────────────────
-  # 1 — Tests
-  # ─────────────────────────────────────────────────────
   test:
     name: 🧪 Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - run: npm install --legacy-peer-deps
       - run: npm test
 
-  # ─────────────────────────────────────────────────────
-  # 2 — Build APK
-  # ─────────────────────────────────────────────────────
   build-apk:
     name: 🤖 Build APK
     runs-on: ubuntu-latest
     needs: test
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ── Java 21 (Capacitor 8 requires Java 21 source compatibility) ──
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      # ── Node 20 ──────────────────────────────────────
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
-      # ── Android SDK ──────────────────────────────────
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Accept SDK licenses
         run: yes | sdkmanager --licenses || true
 
-      - name: Install Android platforms & tools
+      - name: Install Android platforms
         run: sdkmanager "build-tools;34.0.0" "platforms;android-34" "platform-tools"
 
-      # ── npm install ──────────────────────────────────
       - name: Install npm dependencies
         run: npm install --legacy-peer-deps
-        # --legacy-peer-deps avoids ERESOLVE on transitive peer conflicts
 
-      # ── Capacitor: add Android platform ──────────────
       - name: Add Android platform
         run: npx cap add android
 
-      # ── Patch AndroidManifest (BLE + Camera + Storage permissions) ──
-      - name: Patch AndroidManifest.xml
+      - name: Patch AndroidManifest
         run: node patch-android.js
 
-      # ── Sync web assets ───────────────────────────────
-      - name: Sync Capacitor assets
+      - name: Sync Capacitor
         run: npx cap sync android
 
-      # ── Gradle cache ──────────────────────────────────
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
@@ -86,7 +67,6 @@ jobs:
           key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*','android/**/gradle-wrapper.properties') }}
           restore-keys: gradle-${{ runner.os }}-
 
-      # ── Build ─────────────────────────────────────────
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
@@ -96,16 +76,15 @@ jobs:
         env:
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
 
-      # ── Collect APK ───────────────────────────────────
       - name: Collect APK
         run: |
           mkdir -p release
           APK=$(find android -name "*.apk" -not -path "*/intermediates/*" | head -1)
-          echo "APK path: $APK"
-          cp "$APK" "release/breeze-v2-debug-${{ github.run_number }}.apk"
+          echo "APK: $APK"
+          cp "$APK" "release/breeze-v2-${{ github.run_number }}.apk"
           ls -lh release/
 
-      - name: Upload APK artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: breeze-apk-${{ github.run_number }}
@@ -115,17 +94,11 @@ jobs:
       - name: Summary
         run: |
           echo "## 🍃 Breeze APK — Build #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Status | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+          echo "| | |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Branch | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**New in v2:** BLE device discovery · Camera QR scanner · /sdcard/Breeze/ file saving · Accept/Reject transfer dialog" >> $GITHUB_STEP_SUMMARY
 
-  # ─────────────────────────────────────────────────────
-  # 3 — GitHub Release (on v* tags)
-  # ─────────────────────────────────────────────────────
   release:
     name: 🚀 Release
     runs-on: ubuntu-latest
@@ -138,23 +111,14 @@ jobs:
         with:
           name: breeze-apk-${{ github.run_number }}
           path: release/
-
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: "Breeze ${{ github.ref_name }}"
           body: |
             ## 🍃 Breeze ${{ github.ref_name }}
-
-            ### What's new in v2
-            - 🔵 **Bluetooth LE** device discovery — auto-detects nearby Breeze devices
-            - 📶 **Wi-Fi** network awareness
-            - 📷 **Camera QR scanner** — scan peer QR code to connect instantly
-            - 📂 **Saves to /sdcard/Breeze/** — files are in your gallery/file manager
-            - ✋ **Accept/Reject dialog** — see file names & sizes before accepting
-
             ### Install
             1. Download the APK below
             2. Enable **Install unknown apps** in Android Settings
-            3. Open the APK to install
+            3. Open APK to install
           files: release/*.apk

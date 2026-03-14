@@ -12,112 +12,53 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-
 :root{
   --sage:#7EA882;--sage-lt:#A8C5AB;--sage-dk:#4E7852;
-  --cream:#F7F3EE;--sand:#E8DFD0;--mist:#D4E4D6;
-  --coral:#D4826A;--sky:#B5CEDB;
+  --cream:#F7F3EE;--coral:#D4826A;--sky:#B5CEDB;
   --ink:#2C3830;--ink-lt:#5A6E60;--ink-faint:#8FA890;
   --card:#ffffffb8;--card-solid:#FAFAF8;
   --radius:20px;--radius-sm:12px;
   --nav-h:72px;--header-h:64px;
   --shadow:0 4px 24px rgba(44,56,48,.10);
-  --shadow-lg:0 12px 48px rgba(44,56,48,.18);
 }
-
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow:hidden}
-
-/* ── Background ─────────────────────────── */
 .bg{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#EFF6F0,#F7F3EE 50%,#EAE8F5)}
 .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.4;animation:drift 16s ease-in-out infinite alternate}
 .blob:nth-child(1){width:480px;height:480px;background:#C8E6CB;top:-100px;left:-80px}
 .blob:nth-child(2){width:340px;height:340px;background:#B5CEDB;top:35%;right:-60px;animation-delay:-6s}
 .blob:nth-child(3){width:280px;height:280px;background:#F4D9CF;bottom:-60px;left:28%;animation-delay:-12s}
 @keyframes drift{from{transform:translateY(0) scale(1)}to{transform:translateY(28px) scale(1.06)}}
-
-/* ── App Shell ──────────────────────────── */
 .app{position:relative;z-index:1;height:100vh;display:flex;flex-direction:column}
-
-/* ── Header ─────────────────────────────── */
-header{
-  height:var(--header-h);flex-shrink:0;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 20px;
-  background:rgba(247,243,238,.7);backdrop-filter:blur(16px);
-  border-bottom:1px solid rgba(126,168,130,.15);
-}
+header{height:var(--header-h);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(247,243,238,.7);backdrop-filter:blur(16px);border-bottom:1px solid rgba(126,168,130,.15)}
 .logo{display:flex;align-items:center;gap:10px}
 .logo-icon{width:36px;height:36px;background:var(--sage);border-radius:10px;display:grid;place-items:center}
 .logo-icon svg{fill:#fff;width:20px;height:20px}
 .logo-name{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:500;letter-spacing:-.5px}
 .logo-name em{font-style:italic;color:var(--sage-dk)}
-.header-right{display:flex;align-items:center;gap:8px}
-.net-badge{
-  display:flex;align-items:center;gap:5px;
-  background:var(--card);backdrop-filter:blur(8px);
-  border:1px solid rgba(126,168,130,.2);border-radius:20px;
-  padding:5px 10px;font-size:.72rem;color:var(--ink-lt);
-}
+.net-badge{display:flex;align-items:center;gap:5px;background:var(--card);backdrop-filter:blur(8px);border:1px solid rgba(126,168,130,.2);border-radius:20px;padding:5px 10px;font-size:.72rem;color:var(--ink-lt)}
 .net-dot{width:7px;height:7px;border-radius:50%;background:#bbb;transition:background .4s}
 .net-dot.on{background:var(--sage);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(126,168,130,.3)}50%{box-shadow:0 0 0 6px rgba(126,168,130,.08)}}
-
-/* ── Content Area ───────────────────────── */
 .content{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px 16px 8px;display:flex;flex-direction:column;gap:14px}
 .content::-webkit-scrollbar{display:none}
-
-/* ── Bottom Nav ─────────────────────────── */
-.bottom-nav{
-  height:var(--nav-h);flex-shrink:0;
-  display:flex;
-  background:rgba(247,243,238,.85);backdrop-filter:blur(20px);
-  border-top:1px solid rgba(126,168,130,.18);
-  padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0);
-}
-.nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;border:none;background:none;cursor:pointer;
-  color:var(--ink-faint);transition:color .2s;padding:8px 0;border-radius:var(--radius-sm);
-}
+.bottom-nav{height:var(--nav-h);flex-shrink:0;display:flex;background:rgba(247,243,238,.85);backdrop-filter:blur(20px);border-top:1px solid rgba(126,168,130,.18);padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:none;cursor:pointer;color:var(--ink-faint);transition:color .2s;padding:8px 0;border-radius:var(--radius-sm)}
 .nav-btn.active{color:var(--sage-dk)}
 .nav-btn svg{width:22px;height:22px;fill:currentColor;transition:transform .2s}
 .nav-btn.active svg{transform:scale(1.1)}
 .nav-btn span{font-size:.68rem;font-weight:500;letter-spacing:.3px}
-
-/* ── Screens ────────────────────────────── */
 .screen{display:none;flex-direction:column;gap:14px;width:100%;animation:fadeIn .22s ease}
 .screen.active{display:flex}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── Card ───────────────────────────────── */
-.card{
-  background:var(--card);backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.75);
-  border-radius:var(--radius);padding:18px 20px;
-  box-shadow:var(--shadow);
-}
+.card{background:var(--card);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.75);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
 .card-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:400;margin-bottom:4px}
 .card-sub{font-size:.8rem;color:var(--ink-lt);line-height:1.5}
 .section-label{font-size:.68rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint);font-weight:500;margin:4px 0 10px}
-
-/* ── My ID Card ─────────────────────────── */
 .my-id-card{background:linear-gradient(135deg,rgba(126,168,130,.18),rgba(181,206,219,.15));border:1px solid rgba(126,168,130,.25)}
 .my-id-row{display:flex;align-items:center;gap:12px;margin-top:12px}
-.my-id-value{
-  flex:1;font-size:1rem;font-weight:500;letter-spacing:.8px;
-  background:rgba(255,255,255,.6);border-radius:10px;
-  padding:10px 14px;color:var(--ink);font-variant-numeric:tabular-nums;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.my-id-value{flex:1;font-size:1rem;font-weight:500;letter-spacing:.8px;background:rgba(255,255,255,.6);border-radius:10px;padding:10px 14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .id-action-row{display:flex;gap:8px;margin-top:10px}
-
-/* ── Buttons ─────────────────────────────── */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  border:none;border-radius:var(--radius-sm);padding:11px 18px;
-  font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;
-  cursor:pointer;transition:all .2s;white-space:nowrap;
-}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:var(--radius-sm);padding:11px 18px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
 .btn svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
 .btn-primary{background:var(--sage);color:#fff}
 .btn-primary:active{background:var(--sage-dk);transform:scale(.97)}
@@ -126,296 +67,168 @@ header{
 .btn-coral{background:var(--coral);color:#fff}
 .btn-coral:active{background:#c0705a;transform:scale(.97)}
 .btn-ghost{background:rgba(255,255,255,.5);color:var(--ink-lt);border:1px solid rgba(0,0,0,.08)}
-.btn-ghost:active{background:rgba(255,255,255,.8)}
 .btn-sm{padding:8px 14px;font-size:.78rem;border-radius:10px}
 .btn:disabled{opacity:.45;pointer-events:none}
 .btn-full{width:100%}
-.btn-icon{width:38px;height:38px;padding:0;border-radius:10px;background:rgba(255,255,255,.6);color:var(--ink-lt);border:1px solid rgba(0,0,0,.07)}
-
-/* ── Nearby Devices ──────────────────────── */
-.scan-status{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 16px;background:rgba(168,197,171,.12);
-  border-radius:var(--radius-sm);margin-bottom:4px;
-}
-.scan-ring{
-  width:28px;height:28px;border-radius:50%;
-  border:3px solid rgba(126,168,130,.2);
-  border-top-color:var(--sage);
-  animation:spin 1s linear infinite;flex-shrink:0;
-}
+.scan-status{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(168,197,171,.12);border-radius:var(--radius-sm);margin-bottom:4px}
+.scan-ring{width:28px;height:28px;border-radius:50%;border:3px solid rgba(126,168,130,.2);border-top-color:var(--sage);animation:spin 1s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .scan-ring.idle{animation:none;border-color:rgba(126,168,130,.2);border-top-color:rgba(126,168,130,.2)}
 .scan-info{flex:1}
 .scan-info strong{font-size:.85rem;color:var(--ink)}
 .scan-info small{font-size:.72rem;color:var(--ink-lt);display:block;margin-top:1px}
-
 .device-list{display:flex;flex-direction:column;gap:8px}
-.device-item{
-  display:flex;align-items:center;gap:12px;
-  background:rgba(255,255,255,.65);border-radius:var(--radius-sm);
-  padding:12px 14px;border:1px solid rgba(255,255,255,.8);
-  cursor:pointer;transition:all .2s;animation:fadeIn .25s ease;
-}
+.device-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.65);border-radius:var(--radius-sm);padding:12px 14px;border:1px solid rgba(255,255,255,.8);cursor:pointer;transition:all .2s;animation:fadeIn .25s ease}
 .device-item:active{background:rgba(168,197,171,.2);transform:scale(.98)}
-.device-avatar{
-  width:42px;height:42px;border-radius:12px;
-  background:linear-gradient(135deg,var(--sage-lt),var(--sage));
-  display:grid;place-items:center;flex-shrink:0;
-}
+.device-avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--sage-lt),var(--sage));display:grid;place-items:center;flex-shrink:0}
+.device-avatar.breeze-device{background:linear-gradient(135deg,#4E7852,#2C5F30)}
 .device-avatar svg{fill:#fff;width:22px;height:22px}
 .device-info{flex:1;min-width:0}
 .device-name{font-size:.9rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .device-meta{font-size:.72rem;color:var(--ink-lt);margin-top:2px;display:flex;align-items:center;gap:6px}
-.device-signal{display:flex;gap:2px;align-items:flex-end;height:14px}
-.signal-bar{width:4px;background:var(--sage);border-radius:2px}
-.signal-bar.weak{opacity:.25}
-.device-connect{font-size:.75rem;color:var(--sage-dk);font-weight:500;flex-shrink:0}
+.breeze-badge{font-size:.65rem;background:rgba(78,120,82,.15);color:var(--sage-dk);padding:2px 6px;border-radius:4px;font-weight:600}
+.device-action{font-size:.75rem;font-weight:600;flex-shrink:0;padding:6px 12px;border-radius:8px;background:var(--sage);color:#fff;border:none;cursor:pointer}
+.device-action.needs-id{background:rgba(126,168,130,.15);color:var(--sage-dk)}
 .empty-nearby{text-align:center;padding:28px 20px;color:var(--ink-lt);font-size:.85rem}
 .empty-nearby .empty-icon{font-size:2.4rem;margin-bottom:8px}
-
-/* ── File Picker ─────────────────────────── */
-.drop-zone{
-  border:2px dashed rgba(126,168,130,.38);border-radius:14px;
-  padding:28px 20px;text-align:center;cursor:pointer;
-  transition:all .22s;background:rgba(168,197,171,.06);margin-bottom:2px;
-}
+.drop-zone{border:2px dashed rgba(126,168,130,.38);border-radius:14px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .22s;background:rgba(168,197,171,.06);margin-bottom:2px}
 .drop-zone:active,.drop-zone.dragging{border-color:var(--sage);background:rgba(126,168,130,.1)}
 .drop-icon{font-size:2rem;margin-bottom:8px}
 .drop-text{font-size:.82rem;color:var(--ink-lt)}
 .drop-text strong{color:var(--sage-dk)}
 #file-input{display:none}
-
 .file-queue{display:flex;flex-direction:column;gap:8px}
-.file-row{
-  display:flex;align-items:center;gap:10px;
-  background:rgba(168,197,171,.12);border-radius:10px;padding:10px 12px;
-  animation:fadeIn .25s ease;
-}
+.file-row{display:flex;align-items:center;gap:10px;background:rgba(168,197,171,.12);border-radius:10px;padding:10px 12px;animation:fadeIn .25s ease}
 .file-emoji{font-size:1.4rem;flex-shrink:0}
 .file-details{flex:1;min-width:0}
 .file-name{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .file-sz{font-size:.7rem;color:var(--ink-lt);margin-top:1px}
-.file-rm{background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:1.1rem;padding:4px;transition:color .18s}
-.file-rm:hover{color:var(--coral)}
-
-/* ── Send target ─────────────────────────── */
-.target-card{
-  display:flex;align-items:center;gap:12px;
-  background:rgba(78,120,82,.1);border:1.5px solid rgba(78,120,82,.25);
-  border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:2px;
-}
+.file-rm{background:none;border:none;cursor:pointer;color:var(--ink-faint);font-size:1.1rem;padding:4px}
+.target-card{display:flex;align-items:center;gap:12px;background:rgba(78,120,82,.1);border:1.5px solid rgba(78,120,82,.25);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:2px}
 .target-avatar{width:38px;height:38px;border-radius:10px;background:var(--sage-dk);display:grid;place-items:center;flex-shrink:0}
 .target-avatar svg{fill:#fff;width:20px;height:20px}
 .target-info{flex:1;min-width:0}
 .target-name{font-size:.88rem;font-weight:500}
-.target-id{font-size:.7rem;color:var(--ink-lt);margin-top:1px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ── Progress ────────────────────────────── */
+.target-id{font-size:.7rem;color:var(--ink-lt);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .progress-section{display:none;flex-direction:column;gap:6px;padding:14px 0 0}
 .progress-section.show{display:flex}
 .prog-top{display:flex;justify-content:space-between;font-size:.78rem;color:var(--ink-lt)}
 .prog-bar-bg{height:8px;background:rgba(126,168,130,.2);border-radius:99px;overflow:hidden}
 .prog-bar{height:100%;background:linear-gradient(90deg,var(--sage-lt),var(--sage-dk));border-radius:99px;transition:width .3s ease;width:0%}
-
-/* ── Received Files ──────────────────────── */
+/* Files grid */
 .files-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.file-card{
-  background:var(--card);border-radius:var(--radius-sm);padding:14px;
-  border:1px solid rgba(255,255,255,.75);box-shadow:var(--shadow);
-  cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;
-  display:flex;flex-direction:column;gap:6px;animation:fadeIn .25s ease;
-}
-.file-card:active{transform:scale(.96)}
-.file-card-icon{font-size:2rem}
+.file-card{background:var(--card);border-radius:var(--radius-sm);padding:14px;border:1px solid rgba(255,255,255,.75);box-shadow:var(--shadow);cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:6px;animation:fadeIn .25s ease;position:relative;overflow:hidden}
+.file-card:active{transform:scale(.95);background:rgba(168,197,171,.2)}
+.file-card-thumb{width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:4px}
+.file-card-icon{font-size:2.4rem;margin-bottom:2px}
 .file-card-name{font-size:.78rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .file-card-meta{font-size:.68rem;color:var(--ink-lt)}
+.file-card-open{position:absolute;bottom:8px;right:8px;background:var(--sage);color:#fff;border:none;border-radius:6px;font-size:.65rem;padding:3px 8px;cursor:pointer}
 .files-empty{text-align:center;padding:40px 20px;color:var(--ink-lt)}
 .files-empty .empty-icon{font-size:2.8rem;margin-bottom:10px}
-
-/* ── Manual ID input ─────────────────────── */
 .manual-row{display:flex;gap:8px;margin-top:4px}
-.field{
-  flex:1;background:rgba(255,255,255,.75);border:1.5px solid rgba(126,168,130,.28);
-  border-radius:var(--radius-sm);padding:11px 14px;
-  font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);outline:none;
-  transition:border-color .2s;
-}
+.field{flex:1;background:rgba(255,255,255,.75);border:1.5px solid rgba(126,168,130,.28);border-radius:var(--radius-sm);padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--ink);outline:none;transition:border-color .2s}
 .field:focus{border-color:var(--sage)}
 .field::placeholder{color:#b0bab4}
-
-/* ── MODALS ──────────────────────────────── */
-.modal-backdrop{
-  position:fixed;inset:0;z-index:100;
-  background:rgba(20,30,22,.5);backdrop-filter:blur(6px);
-  display:none;align-items:flex-end;justify-content:center;
-  animation:fadeIn .2s ease;
-}
+/* Modals */
+.modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(20,30,22,.5);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
 .modal-backdrop.open{display:flex}
-.modal-sheet{
-  width:100%;max-width:500px;background:var(--card-solid);
-  border-radius:24px 24px 0 0;padding:20px 20px 32px;
-  animation:sheetUp .3s cubic-bezier(.34,1.1,.64,1);
-  max-height:90vh;overflow-y:auto;
-}
+.modal-sheet{width:100%;max-width:500px;background:var(--card-solid);border-radius:24px 24px 0 0;padding:20px 20px 32px;animation:sheetUp .3s cubic-bezier(.34,1.1,.64,1);max-height:90vh;overflow-y:auto}
 @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .sheet-handle{width:40px;height:4px;background:rgba(0,0,0,.12);border-radius:99px;margin:0 auto 16px}
 .sheet-title{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:400;margin-bottom:4px}
 .sheet-sub{font-size:.82rem;color:var(--ink-lt);margin-bottom:16px}
-
-/* ── Incoming Request Modal ──────────────── */
-.sender-banner{
-  display:flex;align-items:center;gap:12px;
-  background:rgba(168,197,171,.15);border-radius:var(--radius-sm);
-  padding:12px 14px;margin-bottom:14px;
-}
-.sender-avi{
-  width:44px;height:44px;border-radius:12px;
-  background:linear-gradient(135deg,var(--sage),var(--sage-dk));
-  display:grid;place-items:center;flex-shrink:0;font-size:1.3rem;
-}
+.sender-banner{display:flex;align-items:center;gap:12px;background:rgba(168,197,171,.15);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px}
+.sender-avi{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--sage),var(--sage-dk));display:grid;place-items:center;flex-shrink:0;font-size:1.3rem}
 .sender-info strong{font-size:.92rem}
 .sender-info small{font-size:.72rem;color:var(--ink-lt);display:block;margin-top:1px}
 .incoming-files{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-.inc-file{
-  display:flex;align-items:center;gap:10px;
-  background:rgba(255,255,255,.6);border-radius:10px;padding:10px 12px;
-}
+.inc-file{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.6);border-radius:10px;padding:10px 12px}
 .inc-file-icon{font-size:1.3rem;flex-shrink:0}
 .inc-file-info{flex:1;min-width:0}
 .inc-file-name{font-size:.82rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .inc-file-sz{font-size:.7rem;color:var(--ink-lt)}
-.inc-total{
-  font-size:.78rem;color:var(--ink-lt);text-align:right;
-  padding:6px 0 12px;border-top:1px solid rgba(0,0,0,.06);margin-top:2px;
-}
+.inc-total{font-size:.78rem;color:var(--ink-lt);text-align:right;padding:6px 0 12px;border-top:1px solid rgba(0,0,0,.06);margin-top:2px}
 .request-btns{display:flex;gap:10px}
 .request-btns .btn{flex:1}
-
-/* ── QR Scanner Modal ───────────────────── */
-.scanner-viewport{
-  position:relative;width:100%;aspect-ratio:1;
-  background:#000;border-radius:16px;overflow:hidden;margin-bottom:14px;
-}
+/* QR Scanner */
+.scanner-viewport{position:relative;width:100%;aspect-ratio:1;background:#000;border-radius:16px;overflow:hidden;margin-bottom:14px}
 #qr-video{width:100%;height:100%;object-fit:cover}
-.scan-guide{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-}
-.scan-frame{
-  width:65%;aspect-ratio:1;border:2.5px solid rgba(255,255,255,.8);border-radius:16px;
-  position:relative;
-}
-.scan-corner{
-  position:absolute;width:20px;height:20px;border-color:var(--sage-lt);border-style:solid;
-}
+.scan-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.scan-frame{width:65%;aspect-ratio:1;border:2.5px solid rgba(255,255,255,.8);border-radius:16px;position:relative}
+.scan-corner{position:absolute;width:20px;height:20px;border-color:var(--sage-lt);border-style:solid}
 .scan-corner.tl{top:-2px;left:-2px;border-width:3px 0 0 3px;border-top-left-radius:6px}
 .scan-corner.tr{top:-2px;right:-2px;border-width:3px 3px 0 0;border-top-right-radius:6px}
 .scan-corner.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-bottom-left-radius:6px}
 .scan-corner.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-bottom-right-radius:6px}
-.scan-line{
-  position:absolute;width:90%;height:2px;background:var(--sage-lt);
-  left:5%;top:50%;transform:translateY(-50%);
-  animation:scanLine 2s ease-in-out infinite;
-}
+.scan-line{position:absolute;width:90%;height:2px;background:var(--sage-lt);left:5%;top:50%;transform:translateY(-50%);animation:scanLine 2s ease-in-out infinite}
 @keyframes scanLine{0%{top:10%}50%{top:90%}100%{top:10%}}
 .scan-tip{font-size:.82rem;color:var(--ink-lt);text-align:center}
 #qr-canvas{display:none}
-
-/* ── My QR Modal ─────────────────────────── */
 .qr-wrap{display:flex;justify-content:center;margin:12px 0;padding:16px;background:rgba(255,255,255,.8);border-radius:var(--radius-sm)}
-#my-qrcode canvas,#my-qrcode img{border-radius:8px}
-
-/* ── Toast ───────────────────────────────── */
 .toast-box{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:calc(100% - 32px);max-width:360px}
-.toast{
-  background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;
-  font-size:.82rem;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25);
-  animation:toastIn .3s cubic-bezier(.34,1.4,.64,1);
-}
+.toast{background:var(--ink);color:#fff;padding:12px 16px;border-radius:14px;font-size:.82rem;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.25);animation:toastIn .3s cubic-bezier(.34,1.4,.64,1)}
 .toast.ok{background:var(--sage-dk)}
 .toast.err{background:var(--coral)}
 @keyframes toastIn{from{opacity:0;transform:translateY(-12px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+/* File viewer modal */
+#modal-fileview .modal-sheet{padding-bottom:20px}
+.fileview-img{width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#000}
+.fileview-info{margin-top:12px;font-size:.85rem;color:var(--ink-lt);text-align:center}
 </style>
 </head>
 <body>
 <div class="bg"><div class="blob"></div><div class="blob"></div><div class="blob"></div></div>
-
 <div class="app">
-<!-- Header -->
 <header>
   <div class="logo">
-    <div class="logo-icon">
-      <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-    </div>
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg></div>
     <span class="logo-name">Br<em>ee</em>ze</span>
   </div>
-  <div class="header-right">
-    <div class="net-badge">
-      <div class="net-dot" id="net-dot"></div>
-      <span id="net-label">…</span>
-    </div>
+  <div class="net-badge">
+    <div class="net-dot" id="net-dot"></div>
+    <span id="net-label">…</span>
   </div>
 </header>
 
-<!-- Screens -->
 <div class="content">
-
-  <!-- ═══ NEARBY SCREEN ═══ -->
+  <!-- NEARBY -->
   <div class="screen active" id="screen-nearby">
-    <!-- My ID card -->
     <div class="card my-id-card">
       <div class="card-title">Your Device</div>
-      <div class="card-sub" id="my-device-name">Detecting name…</div>
+      <div class="card-sub" id="my-device-name">Detecting…</div>
       <div class="my-id-row">
         <div class="my-id-value" id="my-peer-id">Connecting…</div>
       </div>
       <div class="id-action-row">
-        <button class="btn btn-secondary btn-sm" onclick="copyID()">
-          <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-          Copy ID
-        </button>
-        <button class="btn btn-secondary btn-sm" onclick="openMyQR()">
-          <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zM3 21h8v-8H3v8zm2-6h4v4H5v-4zM13 3v8h8V3h-8zm6 6h-4V5h4v4zM13 13h2v2h-2zM15 15h2v2h-2zM13 17h2v2h-2zM17 13h2v2h-2zM19 15h2v2h-2zM17 17h2v2h-2zM19 19h2v2h-2zM15 19h2v2h-2zM13 21h2v2h-2z"/></svg>
-          My QR
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="openScanner()">
-          <svg viewBox="0 0 24 24"><path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zM19 13h1.5v1.5H19V13z"/></svg>
-          Scan QR
-        </button>
+        <button class="btn btn-secondary btn-sm" onclick="copyID()">📋 Copy ID</button>
+        <button class="btn btn-secondary btn-sm" onclick="openMyQR()">📷 My QR</button>
+        <button class="btn btn-primary btn-sm" onclick="openScanner()">🔍 Scan QR</button>
       </div>
     </div>
-
-    <!-- Nearby devices -->
     <div class="card">
-      <div class="scan-status" id="scan-status">
+      <div class="scan-status">
         <div class="scan-ring idle" id="scan-ring"></div>
         <div class="scan-info">
-          <strong id="scan-label">Tap to scan for devices</strong>
-          <small id="scan-sub">Uses Bluetooth &amp; Wi-Fi</small>
+          <strong id="scan-label">Tap Scan to find nearby devices</strong>
+          <small id="scan-sub">Bluetooth + Wi-Fi</small>
         </div>
         <button class="btn btn-secondary btn-sm" id="scan-btn" onclick="toggleScan()">Scan</button>
       </div>
-
       <div class="section-label">Nearby Devices</div>
       <div class="device-list" id="device-list">
-        <div class="empty-nearby">
-          <div class="empty-icon">📡</div>
-          <div>No devices found yet.<br>Tap <strong>Scan</strong> to start.</div>
-        </div>
+        <div class="empty-nearby"><div class="empty-icon">📡</div><div>No devices found yet.</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ═══ SEND SCREEN ═══ -->
+  <!-- SEND -->
   <div class="screen" id="screen-send">
-    <!-- Connected target -->
     <div id="target-section" style="display:none">
       <div class="card" style="padding:14px 16px">
         <div class="section-label">Sending to</div>
-        <div class="target-card" id="target-card">
-          <div class="target-avatar">
-            <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
-          </div>
+        <div class="target-card">
+          <div class="target-avatar"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
           <div class="target-info">
             <div class="target-name" id="target-name">Device</div>
             <div class="target-id" id="target-id">—</div>
@@ -424,17 +237,12 @@ header{
         </div>
       </div>
     </div>
-
-    <!-- Manual connect -->
     <div class="card" id="manual-connect-card">
       <div class="card-title">Connect to Device</div>
       <div class="card-sub">Enter their Breeze ID or scan their QR code</div>
       <div class="manual-row" style="margin-top:12px">
-        <input class="field" id="remote-id-input" type="text" placeholder="Paste Peer ID here…"/>
-        <button class="btn btn-primary" onclick="connectManual()">
-          <svg viewBox="0 0 24 24"><path d="M9.5 15.584V16.8c0 .884-.397 1.575-.948 1.866L5 20.5v-11l.948.552c.176.103.352.25.52.439l-.02-.012V12.5c0 1.657 1.343 3 3 3h.052zM21 9c0 .552-.064 1.088-.184 1.604l-1.56-.904A5 5 0 0 0 19 9c0-2.761-2.239-5-5-5s-5 2.239-5 5c0 .552.064 1.088.184 1.604L7.624 9.7A7 7 0 0 1 7 9c0-3.866 3.134-7 7-7s7 3.134 7 7zM17 9c0 1.657-1.343 3-3 3a2.994 2.994 0 0 1-2.576-1.48l-1.56-.904A5 5 0 0 0 14 14c.552 0 1.088-.064 1.604-.184l1.56.904A7 7 0 0 1 14 16a7 7 0 0 1-7-7 7 7 0 0 1 .424-2.396l1.56.904A5 5 0 0 0 9 9c0 2.761 2.239 5 5 5s5-2.239 5-5a5 5 0 0 0-.424-2.396l1.56.904A7 7 0 0 1 21 9zm-3 0a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
-          Connect
-        </button>
+        <input class="field" id="remote-id-input" type="text" placeholder="Paste Peer ID…"/>
+        <button class="btn btn-primary" onclick="connectManual()">Connect</button>
       </div>
       <div style="text-align:center;margin:10px 0;font-size:.75rem;color:var(--ink-faint)">— or —</div>
       <button class="btn btn-secondary btn-full" onclick="openScanner()">
@@ -442,13 +250,11 @@ header{
         Scan QR Code
       </button>
     </div>
-
-    <!-- File picker -->
     <div class="card">
       <div class="card-title">Files to Send</div>
       <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
         <div class="drop-icon">🍃</div>
-        <div class="drop-text">Tap to pick files or <strong>drag here</strong></div>
+        <div class="drop-text">Tap to pick or <strong>drag here</strong></div>
         <input type="file" id="file-input" multiple/>
       </div>
       <div class="file-queue" id="file-queue" style="margin-top:10px"></div>
@@ -463,33 +269,27 @@ header{
     </div>
   </div>
 
-  <!-- ═══ FILES SCREEN ═══ -->
+  <!-- FILES -->
   <div class="screen" id="screen-files">
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <div>
           <div class="card-title">Received Files</div>
-          <div class="card-sub">Saved to /sdcard/Breeze/</div>
+          <div class="card-sub" id="save-path-label">Saved to Downloads/Breeze/</div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="clearFiles()">Clear</button>
       </div>
       <div id="files-container">
-        <div class="files-empty">
-          <div class="empty-icon">📂</div>
-          <div>Files you receive appear here.<br>They're saved to <strong>/sdcard/Breeze/</strong></div>
-        </div>
+        <div class="files-empty"><div class="empty-icon">📂</div><div>Received files appear here.<br>Tap a file to open it.</div></div>
       </div>
-      <!-- Receive progress -->
       <div class="progress-section" id="recv-progress" style="margin-top:14px">
         <div class="prog-top"><span id="recv-prog-name">Waiting…</span><span id="recv-prog-pct"></span></div>
         <div class="prog-bar-bg"><div class="prog-bar" id="recv-prog-bar"></div></div>
       </div>
     </div>
   </div>
+</div>
 
-</div><!-- /content -->
-
-<!-- Bottom Nav -->
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-nearby" onclick="switchTab('nearby')">
     <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.657-1.657-4.343-1.657-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
@@ -504,16 +304,14 @@ header{
     <span>Files</span>
   </button>
 </nav>
-</div><!-- /app -->
+</div>
 
-<!-- ══ MODALS ══════════════════════════════════ -->
-
-<!-- My QR Modal -->
+<!-- Modals -->
 <div class="modal-backdrop" id="modal-myqr">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Your Breeze ID</div>
-    <div class="sheet-sub">Let others scan this to connect to you</div>
+    <div class="sheet-sub">Let others scan this to connect to you instantly</div>
     <div class="qr-wrap"><div id="my-qrcode"></div></div>
     <div class="my-id-value" id="qr-sheet-id" style="text-align:center;margin-bottom:12px">—</div>
     <div style="display:flex;gap:10px">
@@ -523,20 +321,17 @@ header{
   </div>
 </div>
 
-<!-- QR Scanner Modal -->
 <div class="modal-backdrop" id="modal-scanner">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Scan QR Code</div>
-    <div class="sheet-sub">Point the camera at the other device's QR code</div>
+    <div class="sheet-sub">Point at the other device's QR code</div>
     <div class="scanner-viewport">
       <video id="qr-video" autoplay playsinline muted></video>
       <div class="scan-guide">
         <div class="scan-frame">
-          <div class="scan-corner tl"></div>
-          <div class="scan-corner tr"></div>
-          <div class="scan-corner bl"></div>
-          <div class="scan-corner br"></div>
+          <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+          <div class="scan-corner bl"></div><div class="scan-corner br"></div>
           <div class="scan-line"></div>
         </div>
       </div>
@@ -547,12 +342,11 @@ header{
   </div>
 </div>
 
-<!-- Incoming Request Modal -->
 <div class="modal-backdrop" id="modal-incoming">
   <div class="modal-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Incoming Transfer</div>
-    <div class="sheet-sub">Review the files before accepting</div>
+    <div class="sheet-sub">Review before accepting</div>
     <div class="sender-banner">
       <div class="sender-avi" id="incoming-emoji">📱</div>
       <div class="sender-info">
@@ -563,116 +357,110 @@ header{
     <div class="incoming-files" id="incoming-files-list"></div>
     <div class="inc-total" id="incoming-total"></div>
     <div class="request-btns">
-      <button class="btn btn-ghost" onclick="rejectIncoming()">
-        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-        Decline
-      </button>
-      <button class="btn btn-primary" style="flex:2" onclick="acceptIncoming()">
-        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-        Accept &amp; Receive
-      </button>
+      <button class="btn btn-ghost" onclick="rejectIncoming()">Decline</button>
+      <button class="btn btn-primary" style="flex:2" onclick="acceptIncoming()">✓ Accept & Receive</button>
     </div>
   </div>
 </div>
 
-<!-- Toast container -->
+<!-- File viewer modal -->
+<div class="modal-backdrop" id="modal-fileview">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="fv-title">File</div>
+    <div id="fv-content"></div>
+    <div class="fileview-info" id="fv-info"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-secondary btn-full" onclick="shareCurrentFile()">Share / Open With</button>
+      <button class="btn btn-primary btn-full" onclick="closeModal('modal-fileview')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-box" id="toast-box"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════
-// BREEZE APP — v2 (BLE + Camera QR + Save to /sdcard/Breeze)
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════
+// BREEZE v2 — BLE Advertise+Scan, Auto-connect, Downloads/Breeze/ saving
+// ═══════════════════════════════════════════════════════════════════════
 
-// ── Capacitor plugin handles ──────────────────────────────
-const Cap        = window.Capacitor;
-const Plugins    = Cap?.Plugins || {};
-const FS         = Plugins.Filesystem;
-const Network    = Plugins.Network;
-const BLE        = Plugins.BluetoothLe;
+const Cap     = window.Capacitor;
+const Plugins = Cap?.Plugins || {};
+const FS      = Plugins.Filesystem;
+const Network = Plugins.Network;
+const BLE     = Plugins.BluetoothLe;
+const Share   = Plugins.Share;
 
-// ── State ─────────────────────────────────────────────────
+// ── Breeze BLE service UUID (advertised so Breeze devices are identifiable) ──
+const BREEZE_SVC = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+
 const state = {
   myPeerId: null,
-  myDeviceName: 'My Device',
+  myDeviceName: 'Breeze Device',
   peer: null,
   activeConn: null,
   filesToSend: [],
   scanning: false,
-  nearbyDevices: new Map(),   // deviceId → {name, rssi, method}
+  nearbyDevices: new Map(),
   incomingConn: null,
-  incomingMeta: null,          // { senderName, senderPeerId, files }
+  incomingMeta: null,
   rxChunks: [],
   rxFile: null,
   rxBytesReceived: 0,
-  receivedFiles: [],
+  receivedFiles: [],     // {name, size, time, blobUrl, mimeType, nativePath}
   qrGenerated: false,
   scanStream: null,
   qrScanInterval: null,
   connected: false,
   targetName: 'Device',
+  bleAdvertising: false,
+  _reconnecting: false,
+  _netErrToasted: false,
+  currentFileView: null, // file object being viewed
 };
-
-// ── Breeze BLE Service UUID ───────────────────────────────
-const BREEZE_SERVICE = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
 
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
 async function init() {
   await detectDeviceName();
-  await checkNetwork();
-  initPeer();
+  checkNetwork();
   if (Network) Network.addListener('networkStatusChange', checkNetwork);
-  requestPermissions();
+  window.addEventListener('online',  checkNetwork);
+  window.addEventListener('offline', checkNetwork);
+  initPeer();
+  requestCameraPermission();
 }
 
 async function detectDeviceName() {
-  // Try to get a friendly name
   const ua = navigator.userAgent;
-  const model = ua.match(/;\s*([^;)]+)\sBuild\//)?.[1];
+  const model = ua.match(/;\s*([^;)]+)\sBuild\//)?.[1]?.trim();
   state.myDeviceName = model || 'Breeze Device';
   document.getElementById('my-device-name').textContent = state.myDeviceName;
 }
 
-async function requestPermissions() {
-  // Request camera permission early via getUserMedia (browser API)
-  try { const s = await navigator.mediaDevices.getUserMedia({video:true}); s.getTracks().forEach(t=>t.stop()); } catch(e){}
-  // Request Capacitor permissions if available
-  if (Plugins.Permissions) {
-    try {
-      await Plugins.Permissions.requestPermissions({permissions: ['camera', 'microphone']});
-    } catch(e) {}
-  }
+function requestCameraPermission() {
+  navigator.mediaDevices?.getUserMedia({video:true})
+    .then(s => s.getTracks().forEach(t => t.stop()))
+    .catch(() => {});
 }
 
-// ── Network Status ────────────────────────────────────────
 async function checkNetwork() {
   const dot = document.getElementById('net-dot');
   const lbl = document.getElementById('net-label');
   try {
     if (Network) {
       const s = await Network.getStatus();
-      if (s.connected && s.connectionType === 'wifi') {
-        dot.className = 'net-dot on';
-        lbl.textContent = 'Wi-Fi';
-      } else if (s.connected) {
-        dot.className = 'net-dot on';
-        lbl.textContent = s.connectionType || 'Online';
-      } else {
-        dot.className = 'net-dot';
-        lbl.textContent = 'Offline';
-      }
+      dot.className = s.connected ? 'net-dot on' : 'net-dot';
+      lbl.textContent = s.connected ? (s.connectionType === 'wifi' ? 'Wi-Fi' : s.connectionType || 'Online') : 'Offline';
     } else {
       dot.className = navigator.onLine ? 'net-dot on' : 'net-dot';
       lbl.textContent = navigator.onLine ? 'Online' : 'Offline';
     }
   } catch(e) {
-    dot.className = 'net-dot on';
-    lbl.textContent = 'Online';
+    dot.className = 'net-dot on'; lbl.textContent = 'Online';
   }
 }
-window.addEventListener('online',  checkNetwork);
-window.addEventListener('offline', checkNetwork);
 
 // ══════════════════════════════════════════════════════════
 // PEERJS
@@ -687,49 +475,242 @@ function initPeer() {
     state.myPeerId = id;
     document.getElementById('my-peer-id').textContent = id;
     document.getElementById('qr-sheet-id').textContent = id;
-    toast('Ready to share 🍃','ok');
+    toast('Ready to share 🍃', 'ok');
+    // Start advertising so other Breeze devices can find us via BLE
+    startBLEAdvertising();
   });
 
-  state.peer.on('connection', conn => {
-    handleInboundConn(conn);
-  });
+  state.peer.on('connection', conn => handleInboundConn(conn));
 
   state.peer.on('error', err => {
-    // Silently swallow expected errors
-    if (err.type === 'peer-unavailable') return;
-    // When offline, network errors are expected — don't spam toasts
+    if (err.type === 'peer-unavailable') return; // discovery probe — silent
     if (!navigator.onLine && (err.type === 'network' || err.type === 'server-error')) return;
     if (err.type === 'network' || err.type === 'server-error') {
       if (!state._netErrToasted) {
         state._netErrToasted = true;
-        toast('Network error — check your connection', 'err');
+        toast('Network error — check connection', 'err');
         setTimeout(() => { state._netErrToasted = false; }, 10000);
       }
     } else if (err.type !== 'browser-incompatible') {
-      toast('Connection error: ' + err.type, 'err');
+      toast('Error: ' + err.type, 'err');
     }
   });
 
   state.peer.on('disconnected', () => {
-    // Only reconnect/toast if we're actually online — avoids toast flood when Wi-Fi is off
-    if (navigator.onLine) {
-      if (!state._reconnecting) {
-        state._reconnecting = true;
-        toast('Reconnecting…');
-        setTimeout(() => { state._reconnecting = false; }, 8000);
-      }
+    if (navigator.onLine && !state._reconnecting) {
+      state._reconnecting = true;
       try { state.peer.reconnect(); } catch(e) {}
+      setTimeout(() => { state._reconnecting = false; }, 8000);
     }
   });
 }
 
-// ── Connect to peer ───────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+// BLE ADVERTISING — encode peer ID in the device name
+// Other Breeze devices see "BZ:xxxxxxxxxxxxxxxxx" and
+// auto-extract the peer ID to connect directly.
+// ══════════════════════════════════════════════════════════
+async function startBLEAdvertising() {
+  if (!BLE || !state.myPeerId || state.bleAdvertising) return;
+  try {
+    await BLE.initialize({ androidNeverForLocation: false });
+    // Encode peer ID in local name: "BZ:" prefix + full peer ID
+    // BLE local name supports up to ~26 bytes; PeerJS IDs are ~16 chars → fits perfectly
+    await BLE.startAdvertising({
+      localName: 'BZ:' + state.myPeerId,
+      serviceUuids: [BREEZE_SVC],
+    });
+    state.bleAdvertising = true;
+    console.log('BLE advertising started as BZ:' + state.myPeerId);
+  } catch(e) {
+    console.warn('BLE advertising not available:', e.message);
+    // Non-fatal — user can still share via QR or manual ID
+  }
+}
+
+async function stopBLEAdvertising() {
+  if (!BLE || !state.bleAdvertising) return;
+  try { await BLE.stopAdvertising(); } catch(e) {}
+  state.bleAdvertising = false;
+}
+
+// ══════════════════════════════════════════════════════════
+// BLE SCANNING
+// ══════════════════════════════════════════════════════════
+let bleScanActive = false;
+
+async function toggleScan() {
+  state.scanning ? stopScan() : startScan();
+}
+
+async function startScan() {
+  state.scanning = true;
+  state.nearbyDevices.clear();
+  setScanUI(true);
+  renderNearby();
+
+  if (BLE) {
+    try {
+      // 1. Check & request permissions
+      const perm = await BLE.checkPermissions().catch(() => null);
+      if (perm && (perm.location === 'denied' || perm.bluetooth === 'denied')) {
+        await BLE.requestPermissions().catch(() => {});
+      }
+      // 2. Init
+      await BLE.initialize({ androidNeverForLocation: false });
+      // 3. Ask user to turn Bluetooth on if it's off
+      try {
+        await BLE.requestEnable();
+      } catch(e) {
+        toast('Bluetooth is off — Wi-Fi only mode');
+        tryWifiDiscovery();
+        return;
+      }
+      // 4. Scan ALL named devices — no service filter
+      await BLE.addListener('onScanResult', onBLEScanResult);
+      await BLE.requestLEScan({ services: [], allowDuplicates: false, scanMode: 2 });
+      bleScanActive = true;
+    } catch(e) {
+      const msg = e?.message || '';
+      if (msg.toLowerCase().includes('permission')) toast('Bluetooth permission denied', 'err');
+      else toast('Bluetooth unavailable — Wi-Fi only');
+    }
+  }
+
+  tryWifiDiscovery();
+}
+
+function stopScan() {
+  state.scanning = false;
+  setScanUI(false);
+  if (BLE && bleScanActive) {
+    BLE.stopLEScan().catch(() => {});
+    BLE.removeAllListeners().catch(() => {});
+    bleScanActive = false;
+  }
+}
+
+function setScanUI(scanning) {
+  document.getElementById('scan-ring').classList.toggle('idle', !scanning);
+  document.getElementById('scan-label').textContent = scanning ? 'Scanning…' : (state.nearbyDevices.size + ' device(s) found');
+  document.getElementById('scan-sub').textContent   = scanning ? 'Bluetooth + Wi-Fi active' : 'Tap a device to connect';
+  document.getElementById('scan-btn').textContent   = scanning ? 'Stop' : 'Scan';
+}
+
+function onBLEScanResult(result) {
+  const dev = result.device;
+  if (!dev?.deviceId) return;
+
+  const rawName = dev.name?.trim() || '';
+  if (!rawName) return; // skip anonymous devices
+
+  // ── Detect Breeze devices by the "BZ:" prefix in their name ──────────────
+  // When advertising, Breeze sets localName = "BZ:{peerId}"
+  // This lets us auto-connect without needing a QR scan or manual ID entry
+  const isBreeze = rawName.startsWith('BZ:');
+  const extractedPeerId = isBreeze ? rawName.slice(3) : null;
+  const displayName = isBreeze
+    ? (state.nearbyDevices.get(dev.deviceId)?.name || 'Breeze Device') // preserve if already named
+    : rawName;
+
+  state.nearbyDevices.set(dev.deviceId, {
+    deviceId: dev.deviceId,
+    name: displayName,
+    rssi: result.rssi ?? -90,
+    method: 'ble',
+    isBreeze,
+    peerId: extractedPeerId,
+  });
+  renderNearby();
+}
+
+function tryWifiDiscovery() {
+  if (!state.peer || !state.myPeerId) return;
+  const slot = Math.floor(Date.now() / 30000);
+  const discoveryId = 'breeze-discovery-' + slot;
+  const conn = state.peer.connect(discoveryId, { reliable: false, serialization: 'raw' });
+  conn.on('error', () => {}); // peer-unavailable is normal — silent
+  conn.on('open', () => {
+    conn.send(enc(JSON.stringify({ type:'announce', name: state.myDeviceName, peerId: state.myPeerId })));
+    setTimeout(() => { try { conn.close(); } catch(e) {} }, 2000);
+  });
+}
+
+function renderNearby() {
+  const list = document.getElementById('device-list');
+  if (!state.nearbyDevices.size) {
+    list.innerHTML = `<div class="empty-nearby"><div class="empty-icon">📡</div><div>No devices found yet.<br>Tap <strong>Scan</strong> to start.</div></div>`;
+    return;
+  }
+  // Sort: Breeze devices first, then by signal strength
+  const items = [...state.nearbyDevices.values()]
+    .sort((a, b) => (b.isBreeze ? 1 : 0) - (a.isBreeze ? 1 : 0) || b.rssi - a.rssi);
+
+  list.innerHTML = items.map(d => `
+    <div class="device-item" onclick="onDeviceTap('${escHtml(d.deviceId)}')">
+      <div class="device-avatar ${d.isBreeze ? 'breeze-device' : ''}">
+        <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+      </div>
+      <div class="device-info">
+        <div class="device-name">${escHtml(d.name)}</div>
+        <div class="device-meta">
+          ${signalBars(d.rssi)}
+          ${d.isBreeze ? '<span class="breeze-badge">Breeze</span>' : '🔵 BLE'}
+        </div>
+      </div>
+      ${d.isBreeze
+        ? `<button class="device-action" onclick="event.stopPropagation();onDeviceTap('${escHtml(d.deviceId)}')">Connect</button>`
+        : `<button class="device-action needs-id" onclick="event.stopPropagation();onDeviceTap('${escHtml(d.deviceId)}')">ID needed</button>`
+      }
+    </div>`).join('');
+}
+
+function onDeviceTap(deviceId) {
+  const dev = state.nearbyDevices.get(deviceId);
+  if (!dev) return;
+
+  if (dev.isBreeze && dev.peerId) {
+    // Auto-connect directly — peer ID was embedded in BLE advertisement name
+    stopScan();
+    connectToPeer(dev.peerId, dev.name);
+    switchTab('send');
+  } else {
+    // Non-Breeze device or couldn't extract peer ID — guide user to QR/manual
+    switchTab('send');
+    document.getElementById('remote-id-input').placeholder = dev.name + "'s Breeze ID";
+    toast(dev.name + ' found nearby — scan their QR to connect', 'ok');
+  }
+}
+
+function signalBars(rssi) {
+  const s = rssi > -60 ? 3 : rssi > -75 ? 2 : 1;
+  return `<span style="display:flex;gap:2px;align-items:flex-end;height:12px">${[1,2,3].map(i=>`<span style="width:3px;height:${3+i*3}px;background:${i<=s?'var(--sage)':'rgba(0,0,0,.15)'};border-radius:1px;display:block"></span>`).join('')}</span>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// PEER CONNECTION
+// ══════════════════════════════════════════════════════════
 function connectToPeer(peerId, name = 'Device') {
   if (!state.peer || !peerId) return;
+  toast('Connecting to ' + name + '…');
   const conn = state.peer.connect(peerId, { reliable: true, serialization: 'raw' });
   state.activeConn = conn;
-  state.targetName  = name;
-  setupOutboundConn(conn, peerId, name);
+  state.targetName = name;
+  conn.on('open', () => {
+    state.connected = true;
+    document.getElementById('send-btn').disabled = !state.filesToSend.length;
+    showTargetCard(name, peerId);
+    toast('Connected to ' + name + '!', 'ok');
+  });
+  conn.on('data', handleData);
+  conn.on('close', onConnClose);
+  conn.on('error', e => {
+    const msg = e?.type === 'peer-unavailable'
+      ? 'Device not found — check the ID or try again'
+      : 'Connection failed: ' + (e?.type || e);
+    toast(msg, 'err');
+    onConnClose();
+  });
 }
 
 function connectManual() {
@@ -738,34 +719,11 @@ function connectManual() {
   connectToPeer(id, 'Device');
 }
 
-function setupOutboundConn(conn, peerId, name) {
-  conn.on('open', () => {
-    state.connected = true;
-    document.getElementById('send-btn').disabled = false;
-    showTargetCard(name, peerId);
-    switchTab('send');
-    toast('Connected to ' + name + '!', 'ok');
-  });
-  conn.on('data', handleData);
-  conn.on('close', onConnClose);
-  conn.on('error', e => {
-    const msg = e?.type === 'peer-unavailable'
-      ? 'Device not found — check the ID and try again'
-      : 'Connection failed: ' + (e?.type || e);
-    toast(msg, 'err');
-    onConnClose();
-  });
-}
-
 function handleInboundConn(conn) {
-  // We'll hold the conn until the user accepts
   state.incomingConn = conn;
   conn.on('data', handleData);
-  conn.on('close', () => {
-    state.incomingConn = null;
-    closeModal('modal-incoming');
-  });
-  conn.on('error', e => toast('Incoming error','err'));
+  conn.on('close', () => { state.incomingConn = null; closeModal('modal-incoming'); });
+  conn.on('error', () => {});
 }
 
 function onConnClose() {
@@ -773,23 +731,17 @@ function onConnClose() {
   state.activeConn = null;
   document.getElementById('send-btn').disabled = true;
   hideTargetCard();
-  toast('Disconnected');
 }
 
-function disconnectTarget() {
-  state.activeConn?.close();
-  onConnClose();
-}
+function disconnectTarget() { state.activeConn?.close(); onConnClose(); }
 
 // ══════════════════════════════════════════════════════════
 // TRANSFER PROTOCOL
-// Send → file-request → wait for accept → send chunks
 // ══════════════════════════════════════════════════════════
 async function initiateSend() {
   if (!state.activeConn || !state.filesToSend.length) return;
-  // 1. Send file request metadata for receiver to review
-  const filesMeta = state.filesToSend.map(f => ({name: f.name, size: f.size, type: f.type || 'application/octet-stream'}));
-  const req = {type: 'file-request', senderName: state.myDeviceName, senderPeerId: state.myPeerId, files: filesMeta};
+  const req = { type:'file-request', senderName:state.myDeviceName, senderPeerId:state.myPeerId,
+    files: state.filesToSend.map(f => ({name:f.name, size:f.size, type:f.type||''})) };
   state.activeConn.send(enc(JSON.stringify(req)));
   toast('Waiting for receiver to accept…');
   document.getElementById('send-btn').disabled = true;
@@ -798,12 +750,9 @@ async function initiateSend() {
 async function sendFilesAfterAccept() {
   const CHUNK = 64 * 1024;
   for (const file of state.filesToSend) {
-    // Send file header
-    state.activeConn.send(enc(JSON.stringify({type:'file-meta', name: file.name, size: file.size})));
+    state.activeConn.send(enc(JSON.stringify({type:'file-meta', name:file.name, size:file.size, mimeType:file.type||''})));
     await sleep(80);
-    // Send chunks
-    const buf = await file.arrayBuffer();
-    const bytes = new Uint8Array(buf);
+    const bytes = new Uint8Array(await file.arrayBuffer());
     let sent = 0;
     setSendProgress(file.name, 0);
     while (sent < bytes.length) {
@@ -816,89 +765,79 @@ async function sendFilesAfterAccept() {
     state.activeConn.send(enc(JSON.stringify({type:'file-done'})));
     await sleep(150);
   }
-  toast('All files sent! 🍃','ok');
+  toast('All files sent! 🍃', 'ok');
   state.filesToSend = [];
   renderQueue();
   hideSendProgress();
   document.getElementById('send-btn').disabled = false;
 }
 
-// ── Data handler ──────────────────────────────────────────
 function handleData(data) {
-  // Try parsing as control JSON
   try {
     const msg = JSON.parse(dec(data));
-
-    if (msg.type === 'file-request') {
-      // Receiver: show permission modal
-      showIncomingRequest(msg);
-      return;
-    }
-    if (msg.type === 'accepted') {
-      toast('Accepted! Sending files…','ok');
-      sendFilesAfterAccept();
-      return;
-    }
-    if (msg.type === 'rejected') {
-      toast('Transfer was declined', 'err');
-      document.getElementById('send-btn').disabled = false;
-      return;
-    }
-    if (msg.type === 'file-meta') {
-      state.rxFile = msg;
-      state.rxChunks = [];
-      state.rxBytesReceived = 0;
-      setRecvProgress(msg.name, 0);
-      return;
-    }
-    if (msg.type === 'file-done') {
-      finishReceiveFile();
-      return;
-    }
+    if (msg.type === 'file-request')  { showIncomingRequest(msg); return; }
+    if (msg.type === 'accepted')      { toast('Accepted! Sending…', 'ok'); sendFilesAfterAccept(); return; }
+    if (msg.type === 'rejected')      { toast('Transfer declined', 'err'); document.getElementById('send-btn').disabled=false; return; }
+    if (msg.type === 'file-meta')     { state.rxFile={...msg}; state.rxChunks=[]; state.rxBytesReceived=0; setRecvProgress(msg.name,0); return; }
+    if (msg.type === 'file-done')     { finishReceiveFile(); return; }
   } catch(_) {}
-
-  // Binary chunk
   if (state.rxFile && (data instanceof ArrayBuffer || ArrayBuffer.isView(data))) {
     const ab = data instanceof ArrayBuffer ? data : data.buffer;
     state.rxChunks.push(ab);
     state.rxBytesReceived += ab.byteLength;
-    const pct = Math.min(100, Math.round(state.rxBytesReceived / state.rxFile.size * 100));
-    setRecvProgress(state.rxFile.name, pct);
+    setRecvProgress(state.rxFile.name, Math.min(100, Math.round(state.rxBytesReceived/state.rxFile.size*100)));
   }
 }
 
 async function finishReceiveFile() {
   if (!state.rxFile) return;
-  const blob = new Blob(state.rxChunks);
-  await saveFile(state.rxFile.name, blob);
-  addReceivedFile({name: state.rxFile.name, size: blob.size, time: new Date()});
-  toast('Saved: ' + state.rxFile.name, 'ok');
-  state.rxFile = null;
-  state.rxChunks = [];
-  hideRecvProgress();
+  const mime   = state.rxFile.mimeType || guessMime(state.rxFile.name);
+  const blob   = new Blob(state.rxChunks, { type: mime });
+  const blobUrl = URL.createObjectURL(blob);
+
+  // Save to /sdcard/Download/Breeze/
+  const nativePath = await saveFile(state.rxFile.name, blob, mime);
+
+  addReceivedFile({
+    name: state.rxFile.name,
+    size: blob.size,
+    time: new Date(),
+    blobUrl,
+    mimeType: mime,
+    nativePath,
+  });
+
+  toast('Received: ' + state.rxFile.name, 'ok');
+  switchTab('files');
+  state.rxFile = null; state.rxChunks = []; hideRecvProgress();
 }
 
 // ══════════════════════════════════════════════════════════
-// SAVE TO /sdcard/Breeze/
+// FILE SAVING — Downloads/Breeze/
 // ══════════════════════════════════════════════════════════
-async function saveFile(filename, blob) {
+async function saveFile(filename, blob, mime) {
   if (FS) {
-    try {
-      // Ensure /sdcard/Breeze/ exists
-      await FS.mkdir({ path: 'Breeze', directory: 'EXTERNAL_STORAGE', recursive: true }).catch(()=>{});
-      // Convert blob → base64
-      const b64 = await blobToBase64(blob);
-      await FS.writeFile({ path: 'Breeze/' + filename, data: b64, directory: 'EXTERNAL_STORAGE' });
-      return;
-    } catch(e) {
-      console.warn('FS save failed, falling back to download:', e);
+    const dirs = ['DOWNLOADS', 'EXTERNAL_STORAGE', 'DOCUMENTS'];
+    for (const dir of dirs) {
+      try {
+        await FS.mkdir({ path: 'Breeze', directory: dir, recursive: true }).catch(() => {});
+        const b64 = await blobToBase64(blob);
+        await FS.writeFile({ path: 'Breeze/' + filename, data: b64, directory: dir });
+        const uri = await FS.getUri({ path: 'Breeze/' + filename, directory: dir }).catch(() => null);
+        const label = dir === 'DOWNLOADS' ? 'Downloads/Breeze/' : dir === 'EXTERNAL_STORAGE' ? '/sdcard/Breeze/' : 'Documents/Breeze/';
+        document.getElementById('save-path-label').textContent = 'Saved to ' + label;
+        console.log('Saved to', dir, ':', uri?.uri);
+        return uri?.uri || null;
+      } catch(e) {
+        console.warn('Save to', dir, 'failed:', e.message);
+      }
     }
   }
-  // Browser fallback
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  // Fallback: browser download
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: filename });
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  return null;
 }
 
 function blobToBase64(blob) {
@@ -911,189 +850,146 @@ function blobToBase64(blob) {
 }
 
 // ══════════════════════════════════════════════════════════
-// BLE SCANNING (nearby discovery)
+// RECEIVED FILES — clickable, openable
 // ══════════════════════════════════════════════════════════
-let bleScanActive = false;
-let wifiScanInterval = null;
-
-async function toggleScan() {
-  if (state.scanning) {
-    stopScan();
-  } else {
-    startScan();
-  }
+function addReceivedFile(f) {
+  state.receivedFiles.unshift(f);
+  renderReceivedFiles();
 }
 
-async function startScan() {
-  state.scanning = true;
-  state.nearbyDevices.clear();
-  document.getElementById('scan-ring').classList.remove('idle');
-  document.getElementById('scan-label').textContent = 'Scanning for devices…';
-  document.getElementById('scan-sub').textContent = 'Bluetooth + Wi-Fi active';
-  document.getElementById('scan-btn').textContent = 'Stop';
-  renderNearby();
+function renderReceivedFiles() {
+  const el = document.getElementById('files-container');
+  if (!state.receivedFiles.length) {
+    el.innerHTML = `<div class="files-empty"><div class="empty-icon">📂</div><div>Received files appear here.<br>Tap a file to open it.</div></div>`;
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'files-grid';
+  grid.innerHTML = state.receivedFiles.map((f, i) => {
+    const isImage = f.mimeType?.startsWith('image/');
+    const thumb   = isImage ? `<img class="file-card-thumb" src="${f.blobUrl}" onerror="this.style.display='none'" loading="lazy"/>` : `<div class="file-card-icon">${fileEmoji(f.name)}</div>`;
+    return `
+      <div class="file-card" onclick="openReceivedFile(${i})">
+        ${thumb}
+        <div class="file-card-name">${escHtml(f.name)}</div>
+        <div class="file-card-meta">${fmtSize(f.size)}<br>${f.time?.toLocaleTimeString()}</div>
+      </div>`;
+  }).join('');
+  el.innerHTML = '';
+  el.appendChild(grid);
+}
 
-  // ── BLE Scan ──────────────────────────────────────────────
-  if (BLE) {
+function openReceivedFile(i) {
+  const f = state.receivedFiles[i];
+  if (!f) return;
+  state.currentFileView = f;
+
+  document.getElementById('fv-title').textContent = f.name;
+  document.getElementById('fv-info').textContent  = fmtSize(f.size) + ' · ' + (f.nativePath || 'Downloads/Breeze/' + f.name);
+
+  const content = document.getElementById('fv-content');
+  const mime = f.mimeType || '';
+
+  if (mime.startsWith('image/')) {
+    content.innerHTML = `<img class="fileview-img" src="${f.blobUrl}" alt="${escHtml(f.name)}"/>`;
+  } else if (mime === 'application/pdf') {
+    content.innerHTML = `<iframe src="${f.blobUrl}" style="width:100%;height:55vh;border:none;border-radius:10px"></iframe>`;
+  } else if (mime.startsWith('video/')) {
+    content.innerHTML = `<video src="${f.blobUrl}" controls style="width:100%;border-radius:10px;max-height:50vh"></video>`;
+  } else if (mime.startsWith('audio/')) {
+    content.innerHTML = `<audio src="${f.blobUrl}" controls style="width:100%;margin:16px 0"></audio>`;
+  } else if (mime.startsWith('text/') || mime === 'application/json') {
+    content.innerHTML = `<iframe src="${f.blobUrl}" style="width:100%;height:45vh;border:1px solid rgba(0,0,0,.1);border-radius:10px;background:#fff"></iframe>`;
+  } else {
+    content.innerHTML = `<div style="text-align:center;padding:32px 0"><div style="font-size:3.5rem">${fileEmoji(f.name)}</div><div style="margin-top:12px;font-size:.9rem;color:var(--ink-lt)">Tap "Share / Open With" to open this file with another app</div></div>`;
+  }
+
+  openModal('modal-fileview');
+}
+
+async function shareCurrentFile() {
+  const f = state.currentFileView;
+  if (!f) return;
+
+  // Try native share sheet first (lets user open with any installed app)
+  if (Share && f.nativePath) {
     try {
-      // Step 1: check/request permissions
-      const permResult = await BLE.checkPermissions().catch(() => null);
-      if (permResult && (permResult.location === 'denied' || permResult.bluetooth === 'denied')) {
-        await BLE.requestPermissions().catch(()=>{});
-      }
-
-      // Step 2: initialize and prompt user to enable Bluetooth if off
-      await BLE.initialize({ androidNeverForLocation: false });
-
-      // Step 3: requestEnable shows the system dialog "Turn on Bluetooth?"
-      try {
-        await BLE.requestEnable();
-      } catch(e) {
-        // User declined — continue without BLE
-        toast('Bluetooth is off — showing Wi-Fi devices only');
-        tryWifiDiscovery();
-        return;
-      }
-
-      // Step 4: start scanning — scan ALL devices (no service filter)
-      // We show every named device; user picks the one running Breeze
-      await BLE.addListener('onScanResult', onBLEScanResult);
-      await BLE.requestLEScan({
-        services: [],          // no filter — see all nearby BLE devices
-        allowDuplicates: false,
-        scanMode: 2            // SCAN_MODE_LOW_LATENCY for fast results
-      });
-      bleScanActive = true;
-      console.log('BLE scan started');
-    } catch(e) {
-      console.warn('BLE scan failed:', e);
-      const msg = e?.message || '';
-      if (msg.includes('permission') || msg.includes('Permission')) {
-        toast('Bluetooth permission denied — grant it in App Settings', 'err');
-      } else if (msg.includes('disabled') || msg.includes('powered')) {
-        toast('Please enable Bluetooth and try again', 'err');
-      } else {
-        toast('Bluetooth unavailable on this device');
-      }
-    }
-  } else {
-    console.log('BLE plugin not loaded — Wi-Fi only mode');
+      await Share.share({ title: f.name, url: f.nativePath, dialogTitle: 'Open with' });
+      return;
+    } catch(e) { console.warn('Share failed:', e); }
   }
 
-  // ── Wi-Fi discovery via PeerJS ─────────────────────────────
-  tryWifiDiscovery();
+  // If native share not available, try opening blob URL in new tab
+  try {
+    const a = Object.assign(document.createElement('a'), { href: f.blobUrl, target: '_blank' });
+    a.click();
+  } catch(e) {}
+
+  closeModal('modal-fileview');
 }
 
-function stopScan() {
-  state.scanning = false;
-  document.getElementById('scan-ring').classList.add('idle');
-  document.getElementById('scan-label').textContent = state.nearbyDevices.size + ' device(s) found';
-  document.getElementById('scan-sub').textContent = 'Tap a device to connect';
-  document.getElementById('scan-btn').textContent = 'Scan';
-
-  if (BLE && bleScanActive) {
-    BLE.stopLEScan().catch(()=>{});
-    BLE.removeAllListeners();
-    bleScanActive = false;
-  }
-  if (wifiScanInterval) { clearInterval(wifiScanInterval); wifiScanInterval = null; }
+function clearFiles() {
+  state.receivedFiles.forEach(f => { if (f.blobUrl) URL.revokeObjectURL(f.blobUrl); });
+  state.receivedFiles = [];
+  renderReceivedFiles();
 }
 
-function onBLEScanResult(result) {
-  const dev = result.device;
-  if (!dev?.deviceId) return;
-
-  // Show ALL named BLE devices — the user knows which phone belongs to their friend
-  // Anonymous/nameless devices (most IoT) are filtered out for clarity
-  const name = dev.name?.trim();
-  if (!name) return; // skip unnamed devices (headphones, beacons, etc.)
-
-  state.nearbyDevices.set(dev.deviceId, {
-    deviceId: dev.deviceId,
-    name: name,
-    rssi: result.rssi ?? -90,
-    method: 'ble',
-    peerId: null, // they'll share via QR/ID after tapping
-  });
-  renderNearby();
-}
-
-function tryWifiDiscovery() {
-  // Soft Wi-Fi discovery: connect to a shared time-slotted peer ID.
-  // If nobody is there, PeerJS fires peer-unavailable — that's expected and
-  // is now suppressed in the global error handler.
-  if (!state.peer || !state.myPeerId) return;
-  const slot = Math.floor(Date.now() / 30000); // 30-second window
-  const discoveryId = 'breeze-discovery-' + slot;
-
-  const conn = state.peer.connect(discoveryId, { reliable: false, serialization: 'raw' });
-
-  // Silently swallow errors on this probe connection (peer-unavailable is normal)
-  conn.on('error', () => {});
-
-  conn.on('open', () => {
-    conn.send(enc(JSON.stringify({
-      type: 'announce',
-      name: state.myDeviceName,
-      peerId: state.myPeerId
-    })));
-    // Register self as the discovery endpoint so others can find us
-    state.nearbyDevices.set('wifi-self', {
-      deviceId: 'wifi-self',
-      name: state.myDeviceName + ' (You)',
-      rssi: -40,
-      method: 'wifi',
-      peerId: state.myPeerId
-    });
-    setTimeout(() => { try { conn.close(); } catch(e){} }, 2000);
-  });
-}
-
-function renderNearby() {
-  const list = document.getElementById('device-list');
-  if (!state.nearbyDevices.size) {
-    list.innerHTML = `<div class="empty-nearby"><div class="empty-icon">📡</div><div>No devices found yet.<br>Tap <strong>Scan</strong> to start.</div></div>`;
-    return;
-  }
-  const items = [...state.nearbyDevices.values()].sort((a,b) => b.rssi - a.rssi);
-  list.innerHTML = items.map(d => `
-    <div class="device-item" onclick="onDeviceTap('${d.deviceId}','${escHtml(d.name)}','${d.method}')">
-      <div class="device-avatar">
-        <svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+// ══════════════════════════════════════════════════════════
+// INCOMING REQUEST
+// ══════════════════════════════════════════════════════════
+function showIncomingRequest(msg) {
+  state.incomingMeta = msg;
+  document.getElementById('incoming-sender-name').textContent = msg.senderName || 'Unknown';
+  document.getElementById('incoming-sender-id').textContent   = msg.senderPeerId || '—';
+  document.getElementById('incoming-files-list').innerHTML = msg.files.map(f => `
+    <div class="inc-file">
+      <span class="inc-file-icon">${fileEmoji(f.name)}</span>
+      <div class="inc-file-info">
+        <div class="inc-file-name">${escHtml(f.name)}</div>
+        <div class="inc-file-sz">${fmtSize(f.size)}</div>
       </div>
-      <div class="device-info">
-        <div class="device-name">${escHtml(d.name)}</div>
-        <div class="device-meta">
-          ${signalBars(d.rssi)} ${d.method === 'ble' ? '🔵 BLE' : '📶 Wi-Fi'}
-        </div>
-      </div>
-      <span class="device-connect">Connect →</span>
     </div>`).join('');
+  const total = msg.files.reduce((a,f) => a+f.size, 0);
+  document.getElementById('incoming-total').textContent = `${msg.files.length} file(s) · ${fmtSize(total)}`;
+  switchTab('files');
+  openModal('modal-incoming');
 }
 
-function onDeviceTap(deviceId, name, method) {
-  const dev = state.nearbyDevices.get(deviceId);
-
-  // If we already resolved the Breeze Peer ID for this device, connect directly
-  if (dev?.peerId) {
-    connectToPeer(dev.peerId, name);
-    return;
-  }
-
-  // Otherwise guide the user: show a bottom sheet with options
-  showDeviceConnectSheet(name, deviceId);
+function acceptIncoming() {
+  closeModal('modal-incoming');
+  (state.incomingConn || state.activeConn)?.send(enc(JSON.stringify({type:'accepted'})));
+  document.getElementById('recv-progress').classList.add('show');
 }
 
-function showDeviceConnectSheet(name, deviceId) {
-  // Reuse the manual-connect area on the Send tab
-  switchTab('send');
-  document.getElementById('remote-id-input').placeholder = name + "'s Breeze ID";
-  toast('Found ' + name + ' nearby — scan their QR or ask for their ID');
+function rejectIncoming() {
+  closeModal('modal-incoming');
+  const conn = state.incomingConn || state.activeConn;
+  if (conn) { conn.send(enc(JSON.stringify({type:'rejected'}))); conn.close(); }
+  state.incomingConn = null;
 }
 
-function signalBars(rssi) {
-  const strength = rssi > -60 ? 3 : rssi > -75 ? 2 : 1;
-  return `<span style="display:flex;gap:2px;align-items:flex-end;height:12px">${[1,2,3].map(i=>`<span style="width:3px;height:${3+i*3}px;background:${i<=strength?'var(--sage)':'rgba(0,0,0,.15)'};border-radius:1px;display:block"></span>`).join('')}</span>`;
+// ══════════════════════════════════════════════════════════
+// FILE QUEUE (Send side)
+// ══════════════════════════════════════════════════════════
+document.getElementById('file-input').addEventListener('change', e => addFiles([...e.target.files]));
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragging'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragging'); addFiles([...e.dataTransfer.files]); });
+
+function addFiles(files) {
+  files.forEach(f => { if (!state.filesToSend.find(x => x.name===f.name)) state.filesToSend.push(f); });
+  renderQueue();
+}
+function removeFile(i) { state.filesToSend.splice(i,1); renderQueue(); }
+function renderQueue() {
+  document.getElementById('file-queue').innerHTML = state.filesToSend.map((f,i) => `
+    <div class="file-row">
+      <span class="file-emoji">${fileEmoji(f.name)}</span>
+      <div class="file-details"><div class="file-name">${escHtml(f.name)}</div><div class="file-sz">${fmtSize(f.size)}</div></div>
+      <button class="file-rm" onclick="removeFile(${i})">✕</button>
+    </div>`).join('');
+  document.getElementById('send-btn').disabled = !(state.connected && state.filesToSend.length);
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1104,154 +1000,63 @@ async function openScanner() {
   const video = document.getElementById('qr-video');
   const canvas = document.getElementById('qr-canvas');
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} } });
     state.scanStream = stream;
     video.srcObject = stream;
     await video.play();
-    canvas.width  = video.videoWidth  || 640;
-    canvas.height = video.videoHeight || 480;
-
-    state.qrScanInterval = setInterval(() => scanQRFrame(video, canvas), 250);
+    state.qrScanInterval = setInterval(() => {
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const code = jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data, canvas.width, canvas.height, { inversionAttempts:'dontInvert' });
+      if (code?.data) {
+        const id = code.data.trim();
+        stopScanner();
+        connectToPeer(id, 'Scanned Device');
+        document.getElementById('remote-id-input').value = id;
+        toast('QR scanned! Connecting…', 'ok');
+      }
+    }, 250);
   } catch(e) {
     toast('Camera unavailable: ' + e.message, 'err');
     stopScanner();
   }
 }
 
-function scanQRFrame(video, canvas) {
-  if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-  canvas.width  = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'dontInvert' });
-  if (code?.data) {
-    const id = code.data.trim();
-    stopScanner();
-    closeModal('modal-scanner');
-    // Connect to the scanned ID
-    connectToPeer(id, 'Scanned Device');
-    document.getElementById('remote-id-input').value = id;
-    toast('QR scanned! Connecting…','ok');
-  }
-}
-
 function stopScanner() {
-  if (state.qrScanInterval) { clearInterval(state.qrScanInterval); state.qrScanInterval = null; }
-  if (state.scanStream) { state.scanStream.getTracks().forEach(t=>t.stop()); state.scanStream = null; }
-  const video = document.getElementById('qr-video');
-  video.srcObject = null;
+  clearInterval(state.qrScanInterval); state.qrScanInterval = null;
+  state.scanStream?.getTracks().forEach(t => t.stop()); state.scanStream = null;
+  document.getElementById('qr-video').srcObject = null;
   closeModal('modal-scanner');
 }
 
 // ══════════════════════════════════════════════════════════
-// INCOMING REQUEST MODAL
+// MY QR
 // ══════════════════════════════════════════════════════════
-function showIncomingRequest(msg) {
-  state.incomingMeta = msg;
-  document.getElementById('incoming-sender-name').textContent = msg.senderName || 'Unknown Device';
-  document.getElementById('incoming-sender-id').textContent   = msg.senderPeerId || '—';
-  document.getElementById('incoming-emoji').textContent = '📱';
-
-  const filesList = document.getElementById('incoming-files-list');
-  filesList.innerHTML = msg.files.map(f => `
-    <div class="inc-file">
-      <span class="inc-file-icon">${fileEmoji(f.name)}</span>
-      <div class="inc-file-info">
-        <div class="inc-file-name">${escHtml(f.name)}</div>
-        <div class="inc-file-sz">${fmtSize(f.size)}</div>
-      </div>
-    </div>`).join('');
-
-  const totalBytes = msg.files.reduce((a,f) => a + f.size, 0);
-  document.getElementById('incoming-total').textContent =
-    `${msg.files.length} file${msg.files.length !== 1 ? 's' : ''} · Total: ${fmtSize(totalBytes)}`;
-
-  switchTab('files');
-  openModal('modal-incoming');
-}
-
-function acceptIncoming() {
-  closeModal('modal-incoming');
-  const conn = state.incomingConn || state.activeConn;
-  if (conn) conn.send(enc(JSON.stringify({type:'accepted'})));
-  toast('Receiving files…', 'ok');
-  showRecvProgress();
-}
-
-function rejectIncoming() {
-  closeModal('modal-incoming');
-  const conn = state.incomingConn || state.activeConn;
-  if (conn) { conn.send(enc(JSON.stringify({type:'rejected'}))); conn.close(); }
-  state.incomingConn = null;
-  toast('Transfer declined');
-}
-
-// ══════════════════════════════════════════════════════════
-// FILE HANDLING
-// ══════════════════════════════════════════════════════════
-document.getElementById('file-input').addEventListener('change', e => addFiles([...e.target.files]));
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragging'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragging'); addFiles([...e.dataTransfer.files]); });
-
-function addFiles(files) {
-  files.forEach(f => { if (!state.filesToSend.find(x=>x.name===f.name)) state.filesToSend.push(f); });
-  renderQueue();
-}
-function removeFile(i) { state.filesToSend.splice(i,1); renderQueue(); }
-function renderQueue() {
-  const el = document.getElementById('file-queue');
-  el.innerHTML = state.filesToSend.map((f,i) => `
-    <div class="file-row">
-      <span class="file-emoji">${fileEmoji(f.name)}</span>
-      <div class="file-details">
-        <div class="file-name">${escHtml(f.name)}</div>
-        <div class="file-sz">${fmtSize(f.size)}</div>
-      </div>
-      <button class="file-rm" onclick="removeFile(${i})">✕</button>
-    </div>`).join('');
-  document.getElementById('send-btn').disabled = !(state.connected && state.filesToSend.length);
-}
-
-// ── Received files list ───────────────────────────────────
-function addReceivedFile(f) {
-  state.receivedFiles.unshift(f);
-  renderReceivedFiles();
-}
-function renderReceivedFiles() {
-  const el = document.getElementById('files-container');
-  if (!state.receivedFiles.length) {
-    el.innerHTML = `<div class="files-empty"><div class="empty-icon">📂</div><div>Files you receive appear here.<br>Saved to <strong>/sdcard/Breeze/</strong></div></div>`;
-    return;
+let qrGenerated = false;
+function openMyQR() {
+  if (!qrGenerated && state.myPeerId) {
+    new QRCode(document.getElementById('my-qrcode'), { text:state.myPeerId, width:200, height:200, colorDark:'#2C3830', colorLight:'#FAFAF8', correctLevel:QRCode.CorrectLevel.M });
+    qrGenerated = true;
   }
-  const grid = document.createElement('div');
-  grid.className = 'files-grid';
-  grid.innerHTML = state.receivedFiles.map(f => `
-    <div class="file-card">
-      <div class="file-card-icon">${fileEmoji(f.name)}</div>
-      <div class="file-card-name">${escHtml(f.name)}</div>
-      <div class="file-card-meta">${fmtSize(f.size)}<br>${f.time?.toLocaleTimeString()}</div>
-    </div>`).join('');
-  el.innerHTML = '';
-  el.appendChild(grid);
+  openModal('modal-myqr');
 }
-function clearFiles() { state.receivedFiles = []; renderReceivedFiles(); }
+
+function copyID() {
+  if (!state.myPeerId) return;
+  navigator.clipboard.writeText(state.myPeerId).then(() => toast('ID copied!', 'ok'));
+}
 
 // ══════════════════════════════════════════════════════════
 // UI HELPERS
 // ══════════════════════════════════════════════════════════
 function switchTab(name) {
   ['nearby','send','files'].forEach(t => {
-    document.getElementById('screen-'+t).classList.toggle('active', t===name);
-    document.getElementById('nav-'+t).classList.toggle('active', t===name);
+    document.getElementById('screen-' + t).classList.toggle('active', t===name);
+    document.getElementById('nav-' + t).classList.toggle('active', t===name);
   });
 }
-
 function showTargetCard(name, peerId) {
   document.getElementById('target-section').style.display = 'block';
   document.getElementById('manual-connect-card').style.display = 'none';
@@ -1262,86 +1067,65 @@ function hideTargetCard() {
   document.getElementById('target-section').style.display = 'none';
   document.getElementById('manual-connect-card').style.display = 'block';
 }
-
 function setSendProgress(name, pct) {
   document.getElementById('send-progress').classList.add('show');
   document.getElementById('send-prog-name').textContent = name;
   document.getElementById('send-prog-pct').textContent  = pct + '%';
   document.getElementById('send-prog-bar').style.width  = pct + '%';
 }
-function hideSendProgress() { setTimeout(() => document.getElementById('send-progress').classList.remove('show'), 1200); }
-
+function hideSendProgress() { setTimeout(() => document.getElementById('send-progress').classList.remove('show'), 1500); }
 function setRecvProgress(name, pct) {
   document.getElementById('recv-progress').classList.add('show');
   document.getElementById('recv-prog-name').textContent = name;
   document.getElementById('recv-prog-pct').textContent  = pct + '%';
   document.getElementById('recv-prog-bar').style.width  = pct + '%';
 }
-function hideRecvProgress() { setTimeout(() => document.getElementById('recv-progress').classList.remove('show'), 1200); }
-function showRecvProgress() { document.getElementById('recv-progress').classList.add('show'); }
-
-let qrGen = false;
-function openMyQR() {
-  if (!qrGen && state.myPeerId) {
-    new QRCode(document.getElementById('my-qrcode'), {
-      text: state.myPeerId, width: 200, height: 200,
-      colorDark: '#2C3830', colorLight: '#FAFAF8',
-      correctLevel: QRCode.CorrectLevel.M
-    });
-    qrGen = true;
-  }
-  openModal('modal-myqr');
-}
-
-function copyID() {
-  if (!state.myPeerId) return;
-  navigator.clipboard.writeText(state.myPeerId).then(() => toast('ID copied!','ok'));
-}
-
+function hideRecvProgress() { setTimeout(() => document.getElementById('recv-progress').classList.remove('show'), 1500); }
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-// Close modals on backdrop click
-document.querySelectorAll('.modal-backdrop').forEach(bd => {
-  bd.addEventListener('click', e => { if (e.target===bd) bd.classList.remove('open'); });
-});
+document.querySelectorAll('.modal-backdrop').forEach(bd => bd.addEventListener('click', e => { if (e.target===bd) bd.classList.remove('open'); }));
 
 function toast(msg, type='') {
   const el = document.createElement('div');
-  el.className = 'toast' + (type?' '+type:'');
+  el.className = 'toast' + (type ? ' '+type : '');
   el.textContent = msg;
-  document.getElementById('toast-box').appendChild(el);
+  const box = document.getElementById('toast-box');
+  box.appendChild(el);
+  // Max 2 toasts visible at once
+  while (box.children.length > 2) box.removeChild(box.firstChild);
   setTimeout(() => el.remove(), 3000);
 }
 
-// ── Encoding helpers ──────────────────────────────────────
-function enc(str) { return new TextEncoder().encode(str); }
-function dec(buf) { return new TextDecoder().decode(buf instanceof ArrayBuffer ? buf : buf.buffer); }
-
-// ── Utilities ─────────────────────────────────────────────
-function sleep(ms) { return new Promise(r => setTimeout(r,ms)); }
-
+// ══════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════
+function enc(s) { return new TextEncoder().encode(s); }
+function dec(b) { return new TextDecoder().decode(b instanceof ArrayBuffer ? b : b.buffer); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function fmtSize(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  if (b < 1073741824) return (b/1048576).toFixed(1) + ' MB';
-  return (b/1073741824).toFixed(2) + ' GB';
+  if (b<1024) return b+' B'; if (b<1048576) return (b/1024).toFixed(1)+' KB';
+  if (b<1073741824) return (b/1048576).toFixed(1)+' MB'; return (b/1073741824).toFixed(2)+' GB';
 }
-
+function guessMime(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  return ({jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif',webp:'image/webp',
+    svg:'image/svg+xml',pdf:'application/pdf',mp4:'video/mp4',mov:'video/quicktime',
+    avi:'video/x-msvideo',mkv:'video/x-matroska',mp3:'audio/mpeg',wav:'audio/wav',
+    aac:'audio/aac',flac:'audio/flac',txt:'text/plain',html:'text/html',
+    json:'application/json',zip:'application/zip',apk:'application/vnd.android.package-archive'})[ext]
+    || 'application/octet-stream';
+}
 function fileEmoji(name) {
   const ext = name.split('.').pop().toLowerCase();
   return ({pdf:'📄',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',ppt:'📋',pptx:'📋',
     jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🎞️',svg:'🎨',webp:'🖼️',
     mp4:'🎬',mov:'🎬',avi:'🎬',mkv:'🎬',mp3:'🎵',wav:'🎵',flac:'🎵',aac:'🎵',
-    zip:'🗜️',rar:'🗜️',gz:'🗜️',tar:'🗜️',
-    apk:'📦',js:'💻',ts:'💻',py:'🐍',html:'🌐',css:'🎨',json:'📦',md:'📓'})[ext] || '📎';
+    zip:'🗜️',rar:'🗜️',gz:'🗜️',tar:'🗜️',apk:'📦',
+    js:'💻',ts:'💻',py:'🐍',html:'🌐',css:'🎨',json:'📦',md:'📓',txt:'📄'})[ext] || '📎';
 }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Boot ──────────────────────────────────────────────────
+// ── Boot ──
 init();
 </script>
 </body>
