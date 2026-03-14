@@ -29,7 +29,7 @@ test('stopBLEAdvertising fn',  html.includes('stopBLEAdvertising'));
 test('toggleScan fn',          html.includes('toggleScan'));
 test('onBLEScanResult fn',     html.includes('onBLEScanResult'));
 test('BZ: detection in scan',  html.includes("startsWith('BZ:')"));
-test('extractedPeerId',        html.includes('extractedPeerId'));
+test('BLE BZ prefix parse',      html.includes("rawName.startsWith('BZ:')"));
 test('renderNearby fn',        html.includes('renderNearby'));
 test('BLE requestEnable',      html.includes('BLE.requestEnable'));
 test('Auto-connect on tap',    html.includes('isBreeze && dev.peerId'));

@@ -588,6 +588,11 @@ function stopScan() {
     BLE.removeAllListeners().catch(() => {});
     bleScanActive = false;
   }
+  // Clean up discovery hub if we were hosting
+  if (state.discoveryHub) {
+    try { state.discoveryHub.destroy(); } catch(e) {}
+    state.discoveryHub = null;
+  }
 }
 
 function setScanUI(scanning) {
@@ -602,38 +607,122 @@ function onBLEScanResult(result) {
   if (!dev?.deviceId) return;
 
   const rawName = dev.name?.trim() || '';
-  if (!rawName) return; // skip anonymous devices
 
-  // ── Detect Breeze devices by the "BZ:" prefix in their name ──────────────
-  // When advertising, Breeze sets localName = "BZ:{peerId}"
-  // This lets us auto-connect without needing a QR scan or manual ID entry
-  const isBreeze = rawName.startsWith('BZ:');
-  const extractedPeerId = isBreeze ? rawName.slice(3) : null;
-  const displayName = isBreeze
-    ? (state.nearbyDevices.get(dev.deviceId)?.name || 'Breeze Device') // preserve if already named
-    : rawName;
+  // ── Only show Breeze devices ────────────────────────────────────────────────
+  // A Breeze device advertises its local BLE name as "BZ:{peerId}" so the
+  // other side can auto-connect without needing to scan QR or paste an ID.
+  // All other BLE devices (headphones, cars, TVs, random phones) are hidden
+  // to avoid confusing the user with irrelevant devices.
+  if (!rawName.startsWith('BZ:')) return;
+
+  const peerId     = rawName.slice(3); // extract the PeerJS ID
+  const deviceName = 'Breeze · ' + peerId.slice(0, 6).toUpperCase();
 
   state.nearbyDevices.set(dev.deviceId, {
     deviceId: dev.deviceId,
-    name: displayName,
-    rssi: result.rssi ?? -90,
-    method: 'ble',
-    isBreeze,
-    peerId: extractedPeerId,
+    name:     deviceName,
+    rssi:     result.rssi ?? -90,
+    method:   'ble',
+    isBreeze: true,
+    peerId:   peerId,
   });
   renderNearby();
+  console.log('BLE Breeze device found:', deviceName, peerId);
 }
 
+// ── Wi-Fi Discovery: Hub/Spoke via PeerJS ─────────────────────────────────
+// One device becomes the "hub" for the current 30-second time slot.
+// Others connect to it, exchange peer IDs, and both sides see each other.
+// ──────────────────────────────────────────────────────────────────────────
 function tryWifiDiscovery() {
   if (!state.peer || !state.myPeerId) return;
-  const slot = Math.floor(Date.now() / 30000);
-  const discoveryId = 'breeze-discovery-' + slot;
-  const conn = state.peer.connect(discoveryId, { reliable: false, serialization: 'raw' });
-  conn.on('error', () => {}); // peer-unavailable is normal — silent
-  conn.on('open', () => {
-    conn.send(enc(JSON.stringify({ type:'announce', name: state.myDeviceName, peerId: state.myPeerId })));
-    setTimeout(() => { try { conn.close(); } catch(e) {} }, 2000);
+
+  const slot    = Math.floor(Date.now() / 30000); // 30-sec window
+  const hubId   = 'breeze-hub-' + slot;
+  const myInfo  = { name: state.myDeviceName, peerId: state.myPeerId };
+
+  // ── Try to join existing hub ──────────────────────────────
+  const probe = state.peer.connect(hubId, { reliable: true, serialization: 'raw' });
+  probe.on('error', () => {
+    // Nobody hosting yet — become the hub
+    becomeDiscoveryHub(hubId, myInfo);
   });
+  probe.on('open', () => {
+    // Hub found — announce ourselves
+    probe.send(enc(JSON.stringify({ type: 'announce', ...myInfo })));
+    console.log('Joined discovery hub:', hubId);
+  });
+  probe.on('data', data => {
+    try {
+      const msg = JSON.parse(dec(data));
+      // Hub sends back the list of everyone in the room
+      if (msg.type === 'device-list' && Array.isArray(msg.devices)) {
+        msg.devices.forEach(d => {
+          if (d.peerId === state.myPeerId) return; // skip self
+          addWifiDevice(d.name, d.peerId);
+        });
+      }
+    } catch(e) {}
+  });
+  probe.on('close', () => { try { probe.close(); } catch(e) {} });
+}
+
+function becomeDiscoveryHub(hubId, myInfo) {
+  // Spin up a secondary Peer at the well-known hub ID
+  const hub = new Peer(hubId, {
+    host: '0.peerjs.com', port: 443, path: '/', secure: true,
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+  });
+
+  const room = [myInfo]; // list of everyone in this slot
+
+  hub.on('open', () => {
+    console.log('Hosting discovery hub:', hubId);
+    state.discoveryHub = hub;
+  });
+
+  hub.on('connection', conn => {
+    conn.on('data', data => {
+      try {
+        const msg = JSON.parse(dec(data));
+        if (msg.type !== 'announce') return;
+
+        const peer = { name: msg.name, peerId: msg.peerId };
+        if (!room.find(r => r.peerId === peer.peerId)) room.push(peer);
+
+        // Show the joiner in our nearby list
+        addWifiDevice(peer.name, peer.peerId);
+
+        // Send the full room list back so the joiner sees everyone
+        conn.send(enc(JSON.stringify({ type: 'device-list', devices: room })));
+      } catch(e) {}
+    });
+    conn.on('error', () => {});
+  });
+
+  hub.on('error', e => {
+    // ID conflict — someone else became hub in the race; probe them instead
+    if (e.type === 'unavailable-id') {
+      console.log('Hub ID taken, connecting as spoke');
+      state.discoveryHub = null;
+      hub.destroy();
+      setTimeout(() => tryWifiDiscovery(), 500); // retry once
+    }
+  });
+}
+
+function addWifiDevice(name, peerId) {
+  if (state.nearbyDevices.has(peerId)) return; // already listed
+  state.nearbyDevices.set(peerId, {
+    deviceId: peerId,
+    name:     name,
+    rssi:     -45, // Wi-Fi devices get high signal priority
+    method:   'wifi',
+    isBreeze: true, // only Breeze devices appear via Wi-Fi discovery
+    peerId:   peerId,
+  });
+  renderNearby();
+  console.log('Wi-Fi discovered:', name, peerId);
 }
 
 function renderNearby() {
@@ -997,31 +1086,66 @@ function renderQueue() {
 // ══════════════════════════════════════════════════════════
 async function openScanner() {
   openModal('modal-scanner');
-  const video = document.getElementById('qr-video');
+  const video  = document.getElementById('qr-video');
   const canvas = document.getElementById('qr-canvas');
+
+  // Try camera access in order of preference:
+  // 1. Back camera exact  2. Back camera preferred  3. Any camera
+  const attempts = [
+    { facingMode: { exact: 'environment' } },
+    { facingMode: 'environment' },
+    true,  // any camera — covers phones where environment fails
+  ];
+
+  let stream = null;
+  let lastErr = null;
+  for (const videoConstraint of attempts) {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraint });
+      break;
+    } catch(e) {
+      lastErr = e;
+      console.warn('Camera attempt failed:', JSON.stringify(videoConstraint), e.message);
+    }
+  }
+
+  if (!stream) {
+    toast('Camera unavailable: ' + (lastErr?.message || 'permission denied'), 'err');
+    stopScanner();
+    return;
+  }
+
+  state.scanStream = stream;
+  video.srcObject  = stream;
+
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} } });
-    state.scanStream = stream;
-    video.srcObject = stream;
     await video.play();
-    state.qrScanInterval = setInterval(() => {
-      if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const code = jsQR(ctx.getImageData(0,0,canvas.width,canvas.height).data, canvas.width, canvas.height, { inversionAttempts:'dontInvert' });
-      if (code?.data) {
-        const id = code.data.trim();
+  } catch(e) {
+    // autoplay blocked — wait for user interaction
+    await new Promise(res => { video.oncanplay = res; });
+    await video.play();
+  }
+
+  state.qrScanInterval = setInterval(() => {
+    if (video.readyState < video.HAVE_ENOUGH_DATA) return;
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert'
+    });
+    if (code?.data) {
+      const id = code.data.trim();
+      if (id.length > 4) { // sanity check it's not noise
         stopScanner();
         connectToPeer(id, 'Scanned Device');
         document.getElementById('remote-id-input').value = id;
         toast('QR scanned! Connecting…', 'ok');
       }
-    }, 250);
-  } catch(e) {
-    toast('Camera unavailable: ' + e.message, 'err');
-    stopScanner();
-  }
+    }
+  }, 200);
 }
 
 function stopScanner() {
